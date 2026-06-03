@@ -1,18 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import {
-  generateDaily,
-  analyzePuzzle,
-  DEFAULT_CONFIG,
-} from './generator'
+import { generateDaily, analyzePuzzle, DEFAULT_CONFIG } from './generator'
 import { solve } from './solver'
 import { hashStringToSeed } from './rng'
+import { manhattan, edgeKey } from './geometry'
 
 const week = [
   '2026-06-01', '2026-06-02', '2026-06-03', '2026-06-04',
   '2026-06-05', '2026-06-06', '2026-06-07',
 ]
 
-const cellKey = (p: { x: number; y: number }) => `${p.x},${p.y}`
+const inBounds = (p: { x: number; y: number }, size: number) =>
+  p.x >= 0 && p.y >= 0 && p.x < size && p.y < size
 
 describe('generateDaily', () => {
   it('é determinístico: mesma data → mesmo puzzle', () => {
@@ -20,9 +18,7 @@ describe('generateDaily', () => {
   })
 
   it('datas diferentes → puzzles diferentes', () => {
-    const a = generateDaily('2026-06-03')
-    const b = generateDaily('2026-06-04')
-    expect(a).not.toEqual(b)
+    expect(generateDaily('2026-06-03')).not.toEqual(generateDaily('2026-06-04'))
   })
 
   it('grava a seed derivada da data no puzzle', () => {
@@ -46,21 +42,22 @@ describe('generateDaily', () => {
         expect(waypoints).toHaveLength(DEFAULT_CONFIG.waypointCount)
         expect(walls).toHaveLength(DEFAULT_CONFIG.wallCount)
 
-        // Tudo dentro da grade
-        for (const c of [...waypoints, ...walls]) {
-          expect(c.x).toBeGreaterThanOrEqual(0)
-          expect(c.y).toBeGreaterThanOrEqual(0)
-          expect(c.x).toBeLessThan(size)
-          expect(c.y).toBeLessThan(size)
-        }
+        // Waypoints: dentro da grade e distintos
+        for (const c of waypoints) expect(inBounds(c, size)).toBe(true)
+        const wpKeys = waypoints.map((c) => `${c.x},${c.y}`)
+        expect(new Set(wpKeys).size).toBe(wpKeys.length)
 
-        // Células distintas (waypoints e paredes não se sobrepõem)
-        const keys = [...waypoints, ...walls].map(cellKey)
-        expect(new Set(keys).size).toBe(keys.length)
+        // Paredes: arestas válidas (vizinhas, dentro da grade) e distintas
+        for (const w of walls) {
+          expect(inBounds(w.a, size)).toBe(true)
+          expect(inBounds(w.b, size)).toBe(true)
+          expect(manhattan(w.a, w.b)).toBe(1)
+        }
+        const wallKeys = walls.map((w) => edgeKey(w.a, w.b))
+        expect(new Set(wallKeys).size).toBe(wallKeys.length)
 
         // Solúvel
-        const solved = solve(pz, DEFAULT_CONFIG.k)
-        expect(solved).not.toBeNull()
+        expect(solve(pz, DEFAULT_CONFIG.k)).not.toBeNull()
 
         // Não-trivial: há margem de melhora e o par não é curto demais
         const analysis = analyzePuzzle(pz, DEFAULT_CONFIG.k)!

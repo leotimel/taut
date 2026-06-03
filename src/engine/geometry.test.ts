@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import type { Point } from './types'
-import { manhattan, areOrthogonallyAdjacent, countTurns } from './geometry'
+import {
+  manhattan,
+  areOrthogonallyAdjacent,
+  countTurns,
+  edgeKey,
+} from './geometry'
 
 const p = (x: number, y: number): Point => ({ x, y })
 
@@ -61,5 +66,14 @@ describe('countTurns', () => {
   it('conta cada virada numa escada (zig-zag)', () => {
     const stair = [p(0, 0), p(1, 0), p(1, 1), p(2, 1), p(2, 2)]
     expect(countTurns(stair)).toBe(3)
+  })
+})
+
+describe('edgeKey', () => {
+  it('independe da ordem das células', () => {
+    expect(edgeKey(p(1, 2), p(1, 3))).toBe(edgeKey(p(1, 3), p(1, 2)))
+  })
+  it('arestas diferentes geram chaves diferentes', () => {
+    expect(edgeKey(p(1, 2), p(1, 3))).not.toBe(edgeKey(p(1, 2), p(2, 2)))
   })
 })

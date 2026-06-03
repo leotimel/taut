@@ -12,8 +12,14 @@ export interface Point {
   y: number
 }
 
-/** Uma célula bloqueada que o caminho precisa contornar. */
-export type Wall = Point
+/**
+ * Uma parede: barreira na aresta entre duas células ortogonalmente adjacentes.
+ * Bloqueia só a passagem entre `a` e `b`; ambas as células seguem pisáveis.
+ */
+export interface Wall {
+  a: Point
+  b: Point
+}
 
 /**
  * O tabuleiro de um dia. Determinístico pela data: a mesma `date` sempre produz
@@ -26,8 +32,8 @@ export interface Puzzle {
   size: number
   /** Os números a ligar, já na ordem crescente 1..N. */
   waypoints: Point[]
-  /** Células bloqueadas. */
-  walls: Point[]
+  /** Paredes (barreiras nas arestas entre células). */
+  walls: Wall[]
   /** Seed derivada da data — torna a geração reproduzível. */
   seed: number
 }

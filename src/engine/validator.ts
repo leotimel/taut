@@ -3,13 +3,13 @@
  * e, em caso negativo, devolve o motivo. TypeScript puro, sem DOM.
  */
 import type { Path, Point, Puzzle } from './types'
-import { areOrthogonallyAdjacent } from './geometry'
+import { areOrthogonallyAdjacent, edgeKey } from './geometry'
 
 /** Motivo pelo qual um caminho é ilegal (uma regra por motivo). */
 export type InvalidReason =
   | 'empty' // caminho vazio
   | 'out-of-bounds' // célula fora da grade
-  | 'hits-wall' // passa por uma parede
+  | 'crosses-wall' // passo cruza uma parede (barreira de aresta)
   | 'not-adjacent' // passo não é ortogonalmente adjacente
   | 'self-intersecting' // repete/cruza uma célula (não é auto-evitante)
   | 'waypoints-order' // não passa por todos os waypoints na ordem crescente
@@ -23,7 +23,7 @@ const samePoint = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y
 
 /**
  * `isLegalPath` valida um caminho COMPLETO contra um puzzle. Reporta a primeira
- * regra violada, na ordem: vazio → limites → parede → adjacência → auto-evitante
+ * regra violada, na ordem: vazio → limites → adjacência → parede → auto-evitante
  * → waypoints.
  *
  * Extremos travados: o caminho deve começar no waypoint 1 e terminar no
@@ -34,7 +34,7 @@ export function isLegalPath(path: Path, puzzle: Puzzle): ValidationResult {
 
   if (path.length === 0) return { legal: false, reason: 'empty' }
 
-  const wallKeys = new Set(walls.map(key))
+  const wallSet = new Set(walls.map((w) => edgeKey(w.a, w.b)))
   const seen = new Set<string>()
 
   for (let i = 0; i < path.length; i++) {
@@ -45,14 +45,16 @@ export function isLegalPath(path: Path, puzzle: Puzzle): ValidationResult {
       return { legal: false, reason: 'out-of-bounds', at: cell }
     }
 
-    // 2. Não pisa em parede.
-    if (wallKeys.has(key(cell))) {
-      return { legal: false, reason: 'hits-wall', at: cell }
-    }
-
-    // 3. Cada passo é ortogonalmente adjacente ao anterior.
-    if (i > 0 && !areOrthogonallyAdjacent(path[i - 1], cell)) {
-      return { legal: false, reason: 'not-adjacent', at: cell }
+    if (i > 0) {
+      const prev = path[i - 1]
+      // 2. Cada passo é ortogonalmente adjacente ao anterior.
+      if (!areOrthogonallyAdjacent(prev, cell)) {
+        return { legal: false, reason: 'not-adjacent', at: cell }
+      }
+      // 3. O passo não cruza uma parede (barreira na aresta prev→cell).
+      if (wallSet.has(edgeKey(prev, cell))) {
+        return { legal: false, reason: 'crosses-wall', at: cell }
+      }
     }
 
     // 4. Auto-evitante: nunca repete (nem cruza) uma célula.

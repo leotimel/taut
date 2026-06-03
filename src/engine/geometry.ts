@@ -18,6 +18,17 @@ export function areOrthogonallyAdjacent(a: Point, b: Point): boolean {
   return manhattan(a, b) === 1
 }
 
+/**
+ * Chave canônica da aresta entre duas células (independe da ordem de a/b).
+ * Uma parede do Taut bloqueia a passagem nesta aresta — as células seguem
+ * pisáveis.
+ */
+export function edgeKey(a: Point, b: Point): string {
+  const ka = `${a.x},${a.y}`
+  const kb = `${b.x},${b.y}`
+  return ka < kb ? `${ka}~${kb}` : `${kb}~${ka}`
+}
+
 /** Direção de um passo, normalizada para um vetor unitário em {-1, 0, 1}². */
 function direction(from: Point, to: Point): Point {
   return { x: Math.sign(to.x - from.x), y: Math.sign(to.y - from.y) }

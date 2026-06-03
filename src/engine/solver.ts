@@ -1,7 +1,7 @@
 /**
  * Solver — calcula o PAR de um puzzle: o caminho auto-evitante de MENOR score
  * composto (`length + k·turns`) que liga os waypoints na ordem, contornando
- * paredes. Busca exata com branch-and-bound. TypeScript puro, sem DOM.
+ * paredes (barreiras de aresta). Busca exata com branch-and-bound. TS puro.
  *
  * É time-agnostic: o par é puramente geométrico (o tempo nunca entra aqui).
  */
@@ -15,11 +15,19 @@ export interface SolveResult {
 }
 
 const DIRS: ReadonlyArray<Point> = [
-  { x: 1, y: 0 },
-  { x: -1, y: 0 },
-  { x: 0, y: 1 },
-  { x: 0, y: -1 },
+  { x: 1, y: 0 }, // 0: direita
+  { x: -1, y: 0 }, // 1: esquerda
+  { x: 0, y: 1 }, // 2: baixo
+  { x: 0, y: -1 }, // 3: cima
 ]
+
+/** Índice da direção de um passo unitário (consistente com DIRS). */
+function dirIndex(dx: number, dy: number): number {
+  if (dx === 1) return 0
+  if (dx === -1) return 1
+  if (dy === 1) return 2
+  return 3
+}
 
 /**
  * Encontra o par. Retorna `null` se o puzzle for insolúvel.
@@ -36,11 +44,19 @@ export function solve(puzzle: Puzzle, k = 2): SolveResult | null {
 
   const cellIndex = (x: number, y: number): number => y * size + x
 
-  const blocked = new Uint8Array(size * size)
+  // Arestas bloqueadas: blockedEdge[cell*4 + dir] = 1 impede o passo naquela
+  // direção. O oposto (dir ^ 1) é bloqueado no vizinho também.
+  const blockedEdge = new Uint8Array(size * size * 4)
   for (const w of walls) {
-    if (w.x >= 0 && w.y >= 0 && w.x < size && w.y < size) {
-      blocked[cellIndex(w.x, w.y)] = 1
-    }
+    const dx = w.b.x - w.a.x
+    const dy = w.b.y - w.a.y
+    if (Math.abs(dx) + Math.abs(dy) !== 1) continue // não-adjacente: ignora
+    const inBounds = (p: Point) =>
+      p.x >= 0 && p.y >= 0 && p.x < size && p.y < size
+    if (!inBounds(w.a) || !inBounds(w.b)) continue
+    const di = dirIndex(dx, dy)
+    blockedEdge[cellIndex(w.a.x, w.a.y) * 4 + di] = 1
+    blockedEdge[cellIndex(w.b.x, w.b.y) * 4 + (di ^ 1)] = 1
   }
 
   // Mapa célula → índice do waypoint (ou -1). Usado pra travar a ordem.
@@ -51,10 +67,8 @@ export function solve(puzzle: Puzzle, k = 2): SolveResult | null {
   }
 
   const start = waypoints[0]
-  if (blocked[cellIndex(start.x, start.y)]) return null
 
-  // Somas-sufixo das distâncias de Manhattan entre waypoints consecutivos:
-  // suffix[i] = distância mínima de wp[i] até wp[n-1] passando pelos do meio.
+  // Somas-sufixo das distâncias de Manhattan entre waypoints consecutivos.
   const suffix = new Array<number>(n).fill(0)
   for (let i = n - 2; i >= 0; i--) {
     suffix[i] = manhattan(waypoints[i], waypoints[i + 1]) + suffix[i + 1]
@@ -76,7 +90,6 @@ export function solve(puzzle: Puzzle, k = 2): SolveResult | null {
     turns: number,
     targetIdx: number,
   ): void {
-    // Todos os waypoints alcançados (terminamos exatamente no último).
     if (targetIdx === n) {
       const total = steps + k * turns
       if (total < best) {
@@ -88,19 +101,20 @@ export function solve(puzzle: Puzzle, k = 2): SolveResult | null {
 
     const target = waypoints[targetIdx]
 
-    // Cota inferior admissível do que falta.
     const lengthLB = manhattan(cur, target) + suffix[targetIdx]
     const turnLB = cur.x !== target.x && cur.y !== target.y ? 1 : 0
     if (steps + k * turns + lengthLB + k * turnLB >= best) return
 
-    // Coleta os vizinhos legais e ordena pra achar bom incumbente cedo.
+    const curCell = cellIndex(cur.x, cur.y)
     const cands: { p: Point; dx: number; dy: number; turn: number; md: number }[] = []
-    for (const d of DIRS) {
+    for (let di = 0; di < 4; di++) {
+      if (blockedEdge[curCell * 4 + di]) continue // parede na aresta
+      const d = DIRS[di]
       const nx = cur.x + d.x
       const ny = cur.y + d.y
       if (nx < 0 || ny < 0 || nx >= size || ny >= size) continue
       const id = cellIndex(nx, ny)
-      if (blocked[id] || visited[id]) continue
+      if (visited[id]) continue
       const w = wpAt[id]
       if (w >= 0 && w !== targetIdx) continue // waypoint fora de hora: proibido
       const turn = hasDir && (d.x !== lastDx || d.y !== lastDy) ? 1 : 0
