@@ -1,7 +1,7 @@
 # Taut
 
 Jogo diário de **golfe lógico**: ligue os números em ordem crescente arrastando
-o dedo numa grade quadrada (começa **6×6**), contornando paredes, com o caminho
+o dedo numa grade quadrada (**6×6**), contornando paredes, com o caminho
 mais elegante possível — minimizando o score. Um puzzle por dia, determinístico
 pela data.
 
@@ -17,7 +17,8 @@ pela data.
 - Conecta os waypoints na **ordem crescente** (1 → 2 → … → N).
 - Passos **ortogonais** (Manhattan), célula a célula.
 - **Auto-evitante:** nunca cruza nem repete uma célula.
-- Não atravessa **parede** (célula bloqueada).
+- Não cruza **parede** (barreira na aresta entre duas células; as células seguem
+  pisáveis).
 - **Não precisa preencher** a grade (caminho livre).
 
 ## Pontuação
@@ -25,10 +26,12 @@ pela data.
 - **Geometria** (no engine, *time-agnostic*): `total = comprimento + k·curvas`,
   **k = 2**. `comprimento` = nº de passos; `curvas` = mudanças de direção.
 - **Par** = mínimo da geometria, calculado pelo **solver** (busca exata). É o
-  ótimo: dá pra empatar, não pra bater.
+  ótimo: dá pra empatar, não pra bater. (No app é rotulado **"Ideal"** e fica
+  **oculto até a conclusão** — revelado no fim, como recompensa.)
 - **Pontos do dia** (FORA do engine, em `lib/`): `geometria.total + penalidade de
-  tempo` (peso pequeno, com teto; ex.: +1 a cada 30 s, máx. +5).
-  **O tempo nunca afeta o par.**
+  tempo + penalidade de tentativas` (ambas pequenas e com teto; ex.: tempo +1 a
+  cada 30 s máx. +5; tentativas +1 por refazer além do 1º, máx. +3).
+  **Tempo e tentativas nunca afetam o par/ideal.**
 
 ## Gerador
 

@@ -12,3 +12,36 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
+
+/* Paleta "Pôr do sol" — quente e vibrante, com tema claro/escuro automático. */
+:root {
+  --taut-surface: #fff7ed;
+  --taut-grid: #ffffff;
+  --taut-grid-line: #f7dcc4;
+  --taut-wall: #7c2d12;
+  --taut-path: #db2777;
+  --taut-preview: rgba(219, 39, 119, 0.35);
+  --taut-wp: #f59e0b;
+  --taut-wp-ring: #ffffff;
+  --taut-wp-text: #451a03;
+  --taut-text: #451a03;
+  --taut-muted: #b45309;
+  --taut-accent: #16a34a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --taut-surface: #1c1917;
+    --taut-grid: #292524;
+    --taut-grid-line: #44403c;
+    --taut-wall: #fb923c;
+    --taut-path: #f472b6;
+    --taut-preview: rgba(244, 114, 182, 0.4);
+    --taut-wp: #fbbf24;
+    --taut-wp-ring: #1c1917;
+    --taut-wp-text: #1c1917;
+    --taut-text: #f5f5f4;
+    --taut-muted: #a8a29e;
+    --taut-accent: #4ade80;
+  }
+}
