@@ -267,7 +267,8 @@ export function ResultModal({
   const handleShareClick = async () => {
     const r = await onShare?.()
     if (r === 'copied') flash('Copiado! 📋')
-    else if (r === 'unavailable') flash('Não deu pra copiar')
+    else if (r === 'downloaded') flash('Imagem salva! 📷')
+    else if (r === 'unavailable') flash('Não deu pra compartilhar')
   }
   const handleChallengeClick = async () => {
     const r = await onChallenge?.()
