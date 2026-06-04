@@ -23,6 +23,7 @@ const points: PointsBreakdown = {
   geometry: 2,
   timePenalty: 0,
   attemptsPenalty: 0,
+  hintsPenalty: 0,
   total: 2,
 }
 const stats: Stats = {

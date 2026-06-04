@@ -13,10 +13,14 @@ export const TIME_PENALTY_MAX = 5
 /** Cada refazer além do 1º vale +1, até no máximo +3. */
 export const ATTEMPTS_PENALTY_MAX = 3
 
+/** Cada dica (espiar o ideal) custa +4 nos pontos do dia. */
+export const HINT_PENALTY = 4
+
 export interface PointsBreakdown {
   geometry: number
   timePenalty: number
   attemptsPenalty: number
+  hintsPenalty: number
   total: number
 }
 
@@ -29,6 +33,7 @@ export function dailyPoints(
   geometry: number,
   elapsedMs: number,
   attempts: number,
+  hints = 0,
 ): PointsBreakdown {
   const timePenalty = Math.min(
     TIME_PENALTY_MAX,
@@ -38,10 +43,12 @@ export function dailyPoints(
     ATTEMPTS_PENALTY_MAX,
     Math.max(0, attempts - 1),
   )
+  const hintsPenalty = Math.max(0, hints) * HINT_PENALTY
   return {
     geometry,
     timePenalty,
     attemptsPenalty,
-    total: geometry + timePenalty + attemptsPenalty,
+    hintsPenalty,
+    total: geometry + timePenalty + attemptsPenalty + hintsPenalty,
   }
 }

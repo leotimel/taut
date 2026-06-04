@@ -319,6 +319,7 @@ export function ResultModal({
               {points.geometry} geometria
               {points.timePenalty > 0 ? ` + ${points.timePenalty} tempo` : ''}
               {points.attemptsPenalty > 0 ? ` + ${points.attemptsPenalty} tentativas` : ''}
+              {points.hintsPenalty > 0 ? ` + ${points.hintsPenalty} dicas` : ''}
             </p>
           </>
         ) : (
