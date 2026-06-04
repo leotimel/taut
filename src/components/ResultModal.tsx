@@ -1,0 +1,353 @@
+/**
+ * ResultModal — painel de resultado e estatísticas. Ao concluir (nunca há
+ * derrota), revela o Ideal (oculto durante o jogo), o tempo, os pontos do dia e
+ * o "traçado perfeito" do solver sobreposto ao seu. Também abre a qualquer
+ * momento pelo ícone de stats — nesse caso, se o dia ainda não foi concluído,
+ * NÃO revela o Ideal nem a solução. Importa só tipos do engine/lib.
+ */
+import { useEffect, useState } from 'react'
+import type { Point, Puzzle, Score } from '../engine/types'
+import type { PointsBreakdown } from '../lib/points'
+import type { Stats } from '../lib/storage'
+import type { ShareResult } from '../lib/share'
+
+interface ResultModalProps {
+  open: boolean
+  onClose: () => void
+  completed: boolean
+  puzzle: Puzzle
+  playerPath: Point[]
+  bestPath: Point[] | null
+  par: Score | null
+  geometry: Score
+  elapsedMs: number
+  points: PointsBreakdown
+  stats: Stats
+  onShare?: () => Promise<ShareResult> | void
+  onChallenge?: () => Promise<ShareResult> | void
+}
+
+const CELL = 40
+const PAD = 8
+
+function fmtTime(ms: number): string {
+  const s = Math.floor(ms / 1000)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+function fmtCountdown(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+}
+
+function msUntilMidnight(): number {
+  const now = new Date()
+  const next = new Date(now)
+  next.setHours(24, 0, 0, 0)
+  return next.getTime() - now.getTime()
+}
+
+function useCountdown(active: boolean): number {
+  const [ms, setMs] = useState(() => msUntilMidnight())
+  useEffect(() => {
+    if (!active) return
+    setMs(msUntilMidnight())
+    const id = setInterval(() => setMs(msUntilMidnight()), 1000)
+    return () => clearInterval(id)
+  }, [active])
+  return ms
+}
+
+/** Tabuleiro estático: seu traçado + o caminho ideal (tracejado) por cima. */
+function BoardReveal({
+  puzzle,
+  playerPath,
+  bestPath,
+}: {
+  puzzle: Puzzle
+  playerPath: Point[]
+  bestPath: Point[] | null
+}) {
+  const { size, waypoints, walls } = puzzle
+  const span = PAD * 2 + size * CELL
+  const cx = (x: number) => PAD + x * CELL + CELL / 2
+  const cy = (y: number) => PAD + y * CELL + CELL / 2
+  const toStr = (p: Point[]) => p.map((c) => `${cx(c.x)},${cy(c.y)}`).join(' ')
+
+  return (
+    <svg
+      viewBox={`0 0 ${span} ${span}`}
+      className="h-auto w-full max-w-[260px] rounded-2xl"
+      style={{ background: 'var(--taut-surface)' }}
+    >
+      {Array.from({ length: size }).map((_, y) =>
+        Array.from({ length: size }).map((_, x) => (
+          <rect
+            key={`g-${x}-${y}`}
+            x={PAD + x * CELL + 2}
+            y={PAD + y * CELL + 2}
+            width={CELL - 4}
+            height={CELL - 4}
+            rx={6}
+            fill="var(--taut-grid)"
+            stroke="var(--taut-grid-line)"
+            strokeWidth={1}
+          />
+        )),
+      )}
+      {walls.map((w, i) => {
+        const horizontal = w.a.y === w.b.y
+        if (horizontal) {
+          const bx = PAD + Math.max(w.a.x, w.b.x) * CELL
+          return (
+            <line
+              key={`w-${i}`}
+              x1={bx}
+              y1={PAD + w.a.y * CELL + 3}
+              x2={bx}
+              y2={PAD + w.a.y * CELL + CELL - 3}
+              stroke="var(--taut-wall)"
+              strokeWidth={CELL * 0.14}
+              strokeLinecap="round"
+            />
+          )
+        }
+        const by = PAD + Math.max(w.a.y, w.b.y) * CELL
+        return (
+          <line
+            key={`w-${i}`}
+            x1={PAD + w.a.x * CELL + 3}
+            y1={by}
+            x2={PAD + w.a.x * CELL + CELL - 3}
+            y2={by}
+            stroke="var(--taut-wall)"
+            strokeWidth={CELL * 0.14}
+            strokeLinecap="round"
+          />
+        )
+      })}
+      {playerPath.length >= 2 && (
+        <polyline
+          points={toStr(playerPath)}
+          fill="none"
+          stroke="var(--taut-path)"
+          strokeWidth={CELL * 0.3}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.4}
+        />
+      )}
+      {bestPath && bestPath.length >= 2 && (
+        <polyline
+          points={toStr(bestPath)}
+          fill="none"
+          stroke="var(--taut-accent)"
+          strokeWidth={CELL * 0.16}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeDasharray="1 6"
+        />
+      )}
+      {waypoints.map((w, i) => (
+        <g key={`wp-${i}`}>
+          <circle
+            cx={cx(w.x)}
+            cy={cy(w.y)}
+            r={CELL * 0.28}
+            fill="var(--taut-wp)"
+            stroke="var(--taut-wp-ring)"
+            strokeWidth={2}
+          />
+          <text
+            x={cx(w.x)}
+            y={cy(w.y)}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize={CELL * 0.34}
+            fontWeight={800}
+            fill="var(--taut-wp-text)"
+          >
+            {i + 1}
+          </text>
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <span className="text-2xl font-black" style={{ color: 'var(--taut-path)' }}>
+        {value}
+      </span>
+      <span className="text-xs" style={{ color: 'var(--taut-muted)' }}>
+        {label}
+      </span>
+    </div>
+  )
+}
+
+export function ResultModal({
+  open,
+  onClose,
+  completed,
+  puzzle,
+  playerPath,
+  bestPath,
+  par,
+  geometry,
+  elapsedMs,
+  points,
+  stats,
+  onShare,
+  onChallenge,
+}: ResultModalProps) {
+  const countdown = useCountdown(open)
+  const [toast, setToast] = useState<string | null>(null)
+  if (!open) return null
+
+  const atPar = completed && par !== null && geometry.total === par.total
+
+  const flash = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2000)
+  }
+  const handleShareClick = async () => {
+    const r = await onShare?.()
+    if (r === 'copied') flash('Copiado! 📋')
+    else if (r === 'unavailable') flash('Não deu pra copiar')
+  }
+  const handleChallengeClick = async () => {
+    const r = await onChallenge?.()
+    if (r === 'copied') flash('Link copiado! 🔗')
+    else if (r === 'unavailable') flash('Não deu pra copiar')
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.5)' }}
+      onPointerDown={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="flex max-h-[90svh] w-full max-w-sm flex-col items-center gap-4 overflow-y-auto rounded-3xl p-6 text-center shadow-2xl"
+        style={{ background: 'var(--taut-grid)', color: 'var(--taut-text)' }}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fechar"
+          className="self-end text-xl leading-none"
+          style={{ color: 'var(--taut-muted)' }}
+        >
+          ✕
+        </button>
+
+        {completed ? (
+          <>
+            <h2 className="text-2xl font-black">
+              {atPar ? 'No ideal! 🎉' : 'Concluído! ✓'}
+            </h2>
+
+            <div className="flex items-center justify-center gap-4 text-lg font-semibold">
+              <span>
+                Caminho{' '}
+                <span style={{ color: 'var(--taut-path)' }}>{geometry.total}</span>
+              </span>
+              <span style={{ color: 'var(--taut-muted)' }}>·</span>
+              <span>
+                Ideal{' '}
+                <span style={{ color: 'var(--taut-accent)' }}>
+                  {par?.total ?? '—'}
+                </span>
+              </span>
+            </div>
+
+            <BoardReveal
+              puzzle={puzzle}
+              playerPath={playerPath}
+              bestPath={bestPath}
+            />
+            <p className="text-xs" style={{ color: 'var(--taut-muted)' }}>
+              <span style={{ color: 'var(--taut-path)' }}>━</span> seu traçado ·{' '}
+              <span style={{ color: 'var(--taut-accent)' }}>┄</span> o ideal
+            </p>
+
+            <div className="flex w-full items-center justify-around rounded-2xl py-3" style={{ background: 'var(--taut-surface)' }}>
+              <Stat label="tempo" value={fmtTime(elapsedMs)} />
+              <Stat label="pontos do dia" value={points.total} />
+            </div>
+            <p className="text-xs" style={{ color: 'var(--taut-muted)' }}>
+              {points.geometry} geometria
+              {points.timePenalty > 0 ? ` + ${points.timePenalty} tempo` : ''}
+              {points.attemptsPenalty > 0 ? ` + ${points.attemptsPenalty} tentativas` : ''}
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-2xl font-black">Estatísticas</h2>
+            <p className="text-sm" style={{ color: 'var(--taut-muted)' }}>
+              Conclua o puzzle de hoje pra revelar o ideal e o traçado perfeito.
+            </p>
+          </>
+        )}
+
+        <div className="flex w-full items-center justify-around rounded-2xl py-3" style={{ background: 'var(--taut-surface)' }}>
+          <Stat label="streak 🔥" value={stats.currentStreak} />
+          <Stat label="melhor" value={stats.bestStreak} />
+          <Stat label="jogados" value={stats.daysPlayed} />
+          <Stat label="no ideal" value={stats.parCount} />
+        </div>
+
+        <div className="text-sm" style={{ color: 'var(--taut-muted)' }}>
+          Próximo puzzle em{' '}
+          <span className="font-mono font-semibold" style={{ color: 'var(--taut-text)' }}>
+            {fmtCountdown(countdown)}
+          </span>
+        </div>
+
+        {completed && (
+          <div className="flex w-full gap-3">
+            <button
+              type="button"
+              onClick={handleShareClick}
+              disabled={!onShare}
+              className="flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
+              style={{ background: 'var(--taut-path)', color: '#fff' }}
+            >
+              Compartilhar
+            </button>
+            <button
+              type="button"
+              onClick={handleChallengeClick}
+              disabled={!onChallenge}
+              className="flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
+              style={{
+                background: 'var(--taut-grid)',
+                color: 'var(--taut-text)',
+                border: '2px solid var(--taut-grid-line)',
+              }}
+            >
+              Desafiar amigo
+            </button>
+          </div>
+        )}
+
+        {toast && (
+          <p
+            className="text-sm font-semibold"
+            style={{ color: 'var(--taut-accent)' }}
+          >
+            {toast}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}

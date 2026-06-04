@@ -147,6 +147,7 @@ export function clearAll(): void {
   try {
     localStorage.removeItem(STORAGE_KEY)
     localStorage.removeItem(SESSION_KEY)
+    localStorage.removeItem(ONBOARDING_KEY)
   } catch {
     // ignora
   }
@@ -183,6 +184,26 @@ export function loadSession(date: string): DaySession {
 export function saveSession(session: DaySession): void {
   try {
     localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  } catch {
+    // ignora
+  }
+}
+
+// --- Onboarding (só na 1ª visita) ---
+
+const ONBOARDING_KEY = 'taut:onboarded:v1'
+
+export function hasSeenOnboarding(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDING_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function markOnboardingSeen(): void {
+  try {
+    localStorage.setItem(ONBOARDING_KEY, '1')
   } catch {
     // ignora
   }

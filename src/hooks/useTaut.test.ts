@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { renderHook, act, cleanup } from '@testing-library/react'
 import { useTaut } from './useTaut'
 import { solve } from '../engine/solver'
 import { clearAll } from '../lib/storage'
 
 beforeEach(() => clearAll())
+afterEach(cleanup)
 
 describe('useTaut', () => {
   it('carrega o puzzle do dia e começa no waypoint 1', () => {

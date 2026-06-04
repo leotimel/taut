@@ -6,7 +6,7 @@
  * concluir. Importa do engine e da lib; a UI consome este hook.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Point, Score } from '../engine/types'
+import type { Point } from '../engine/types'
 import { generateDaily } from '../engine/generator'
 import { score } from '../engine/scorer'
 import { solve } from '../engine/solver'
@@ -35,10 +35,9 @@ export function todayISO(): string {
 export function useTaut(dateOverride?: string) {
   const date = useMemo(() => dateOverride ?? todayISO(), [dateOverride])
   const puzzle = useMemo(() => generateDaily(date), [date])
-  const par = useMemo<Score | null>(() => {
-    const r = solve(puzzle, K)
-    return r === null ? null : r.par
-  }, [puzzle])
+  const solution = useMemo(() => solve(puzzle, K), [puzzle])
+  const par = solution?.par ?? null
+  const bestPath = solution?.bestPath ?? null
 
   const [path, setPathState] = useState<Point[]>(() => [puzzle.waypoints[0]])
   const pathRef = useRef(path)
@@ -141,6 +140,7 @@ export function useTaut(dateOverride?: string) {
     puzzle,
     path,
     par,
+    bestPath,
     geometry,
     completed,
     attempts,

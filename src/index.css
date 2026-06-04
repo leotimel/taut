@@ -29,6 +29,29 @@ body {
   --taut-accent: #16a34a;
 }
 
+/* Exemplo animado do onboarding: a linha se desenha em loop. */
+@keyframes taut-draw {
+  0% {
+    stroke-dashoffset: var(--taut-len, 180);
+  }
+  55%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.taut-draw {
+  stroke-dasharray: var(--taut-len, 180);
+  animation: taut-draw 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .taut-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --taut-surface: #1c1917;

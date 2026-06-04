@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest'
-import { saveResult, getDay, getStats, clearAll } from './storage'
+import {
+  saveResult,
+  getDay,
+  getStats,
+  clearAll,
+  hasSeenOnboarding,
+  markOnboardingSeen,
+} from './storage'
 
 const rec = (date: string, score: number, par = 11, completed = true) => ({
   date, score, par, completed,
@@ -84,5 +91,11 @@ describe('storage', () => {
   it('sobrevive a localStorage corrompido', () => {
     localStorage.setItem('taut:v1', 'isto não é json')
     expect(getStats('2026-06-03').history).toEqual([])
+  })
+
+  it('onboarding: começa não-visto e fica visto ao marcar', () => {
+    expect(hasSeenOnboarding()).toBe(false)
+    markOnboardingSeen()
+    expect(hasSeenOnboarding()).toBe(true)
   })
 })
