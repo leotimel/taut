@@ -1,73 +1,87 @@
-# React + TypeScript + Vite
+# Taut
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Taut** é um jogo diário de *golfe lógico*: ligue os números em ordem arrastando
+o dedo numa grade, contornando paredes, com o **traçado mais elegante possível** —
+o menor `comprimento + 2·curvas`. Um puzzle novo por dia, determinístico pela data.
 
-Currently, two official plugins are available:
+🎮 **Jogue:** **[playtaut.vercel.app](https://playtaut.vercel.app)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## A ideia
 
-## React Compiler
+- Ligue **1 → 2 → 3 → …** com passos ortogonais, sem cruzar a própria linha,
+  contornando as **paredes** (barreiras nas arestas entre células).
+- O **Ideal** (o "par", do golfe) é o menor score geométrico possível daquele
+  tabuleiro. Você tenta **empatar** com ele — não dá pra bater, é o ótimo.
+- O Ideal fica **oculto** enquanto você joga; é revelado no fim, com o "traçado
+  perfeito" do solver sobreposto ao seu.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## O motor (o que mais interessa no repo)
 
-## Expanding the ESLint configuration
+O `src/engine/` é **TypeScript puro, sem DOM** — o coração do projeto, 100%
+testado (Vitest, ~95%+ de cobertura no engine).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **`solver.ts`** acha o **par** com busca exata (DFS + *branch-and-bound*). A
+  poda usa uma **cota inferior admissível**: distância de Manhattan até o próximo
+  número + soma das distâncias entre os números restantes (+1 curva quando o alvo
+  difere nos dois eixos). Como a cota nunca superestima, a primeira solução de
+  menor custo encontrada é o ótimo — e roda em **< 1 ms** num 6×6.
+- **`generator.ts`** gera o puzzle do dia de forma determinística (seed da data)
+  num loop *generate-and-test*: usa o solver como **oráculo** e só aceita o
+  tabuleiro se `custo_da_rota_curta − par ≥ limiar`, garantindo que **sempre
+  exista margem de melhora** (o momento "ah, dá pra fazer melhor").
+- **`validator.ts`** decide se um caminho é legal (dentro da grade, ortogonal,
+  auto-evitante, sem cruzar parede, passando pelos números em ordem, começando no
+  1 e terminando no N) e diz o motivo da invalidez.
+- **`scorer.ts`** = `comprimento + k·curvas` (k = 2, *time-agnostic*).
+  Mais: **`geometry.ts`**, **`rng.ts`** (RNG determinístico) e **`route.ts`**
+  (navegação pura do arrasto).
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+> A rota mais curta que um jogador faz de primeira costuma serpentear (muitas
+> curvas); o par troca um pouco de comprimento por bem menos curvas. O gerador
+> garante que essa diferença (o *gap*) seja grande o bastante pra valer a pena.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Arquitetura
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── engine/      # TS puro, sem DOM — a matemática (solver, gerador, validador…)
+├── lib/         # camada de app: seed, storage, points, share, challenge, level, palettes
+├── hooks/       # useTaut (estado, timer, tentativas, XP)
+├── components/  # GameCanvas, ResultModal, Onboarding, BoardSVG
+└── App.tsx
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**Regra de ouro:** `components/` e `hooks/` importam de `engine/`; o `engine/`
+nunca importa nada de UI.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Recursos
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- 🧩 Puzzle **diário e determinístico**, com **rampa de dificuldade** (a densidade
+  de paredes cresce com o tempo).
+- 🏆 **Nível & XP** por performance, com codinomes Cosmos (Ponto → Segmento →
+  Polígono → Espiral → Fractal → Infinito) e **paletas desbloqueáveis** por nível.
+- 🔥 **Streak** com **escudos** (toleram dias pulados) e marcos (7 / 30 / 100).
+- 📤 **Compartilhar** estilo Wordle (sem revelar o traçado nem o ideal) e **link
+  de desafio** (pontos-alvo no hash da URL — zero servidor).
+- ♿ Joga com **toque, mouse e teclado** (setas); tema claro/escuro automático;
+  vibração sutil no mobile.
+- 📱 **PWA instalável** (funciona offline); deploy automático na Vercel a cada push.
+- 💾 100% **local** (localStorage) — sem login, sem backend.
+
+## Stack
+
+Vite · React 19 · TypeScript (strict) · TailwindCSS v4 · Vitest · vite-plugin-pwa.
+
+## Rodando
+
+```bash
+npm install
+npm run dev        # desenvolvimento
+npm run test:run   # testes
+npm run coverage   # testes + cobertura
+npm run build      # build de produção (gera dist/)
 ```
+
+---
+
+O motor é o produto; a tela é a vitrine.
