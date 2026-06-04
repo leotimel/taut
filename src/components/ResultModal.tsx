@@ -13,6 +13,8 @@ import type { ShareResult } from '../lib/share'
 import { isLandmark, type LevelInfo } from '../lib/level'
 import { PALETTES } from '../lib/palettes'
 import { ACHIEVEMENTS, unlockedCount, isUnlocked } from '../lib/achievements'
+import { playLevelUp } from '../lib/sound'
+import confetti from 'canvas-confetti'
 import { BoardBackground, BoardWaypoints } from './BoardSVG'
 
 interface ResultModalProps {
@@ -229,6 +231,25 @@ export function ResultModal({
     const id = setTimeout(() => setBarW(`${pct}%`), 60)
     return () => clearTimeout(id)
   }, [open, level])
+
+  // Comemoração: confete ao bater o ideal / subir de nível; fanfarra no level-up.
+  useEffect(() => {
+    if (!open) return
+    const hitIdeal = completed && par !== null && geometry.total === par.total
+    if (hitIdeal || leveledUp) {
+      try {
+        void confetti({
+          particleCount: hitIdeal ? 90 : 60,
+          spread: 70,
+          origin: { y: 0.4 },
+          disableForReducedMotion: true,
+        })
+      } catch {
+        // ambiente sem canvas/matchMedia (ex.: testes) — ignora
+      }
+    }
+    if (leveledUp) playLevelUp()
+  }, [open, completed, par, geometry.total, leveledUp])
 
   if (!open) return null
 

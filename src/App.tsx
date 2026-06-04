@@ -10,8 +10,11 @@ import {
   markOnboardingSeen,
   getPaletteId,
   setPaletteId,
+  isSoundOn,
+  setSoundOn,
 } from './lib/storage'
 import { applyPalette } from './lib/palettes'
+import { setMuted } from './lib/sound'
 import { Analytics } from '@vercel/analytics/react'
 
 export default function App() {
@@ -20,10 +23,21 @@ export default function App() {
   const [challenge] = useState(() => parseChallenge())
   const [onboardingOpen, setOnboardingOpen] = useState(() => !hasSeenOnboarding())
   const [paletteId, setPaletteIdState] = useState(() => getPaletteId())
+  const [soundOn, setSoundOnState] = useState(() => isSoundOn())
 
   useEffect(() => {
     applyPalette(paletteId)
   }, [paletteId])
+
+  useEffect(() => {
+    setMuted(!soundOn)
+  }, [soundOn])
+
+  const toggleSound = () => {
+    const next = !soundOn
+    setSoundOn(next)
+    setSoundOnState(next)
+  }
 
   const closeOnboarding = () => {
     markOnboardingSeen()
@@ -70,15 +84,26 @@ export default function App() {
         >
           ?
         </button>
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          aria-label="Estatísticas"
-          className="absolute top-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-lg transition active:scale-95"
-          style={{ background: 'var(--taut-grid)', border: '2px solid var(--taut-grid-line)' }}
-        >
-          📊
-        </button>
+        <div className="absolute top-0 right-0 flex gap-1">
+          <button
+            type="button"
+            onClick={toggleSound}
+            aria-label={soundOn ? 'Desligar som' : 'Ligar som'}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-lg transition active:scale-95"
+            style={{ background: 'var(--taut-grid)', border: '2px solid var(--taut-grid-line)' }}
+          >
+            {soundOn ? '🔊' : '🔇'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            aria-label="Estatísticas"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-lg transition active:scale-95"
+            style={{ background: 'var(--taut-grid)', border: '2px solid var(--taut-grid-line)' }}
+          >
+            📊
+          </button>
+        </div>
         <h1
           className="text-4xl font-black tracking-tight"
           style={{ color: 'var(--taut-path)' }}

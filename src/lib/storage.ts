@@ -199,6 +199,7 @@ export function clearAll(): void {
     localStorage.removeItem(SESSION_KEY)
     localStorage.removeItem(ONBOARDING_KEY)
     localStorage.removeItem(PALETTE_KEY)
+    localStorage.removeItem(SOUND_KEY)
   } catch {
     // ignora
   }
@@ -288,6 +289,26 @@ export function getPaletteId(): string {
 export function setPaletteId(id: string): void {
   try {
     localStorage.setItem(PALETTE_KEY, id)
+  } catch {
+    // ignora
+  }
+}
+
+// --- Preferência de som (default ligado) ---
+
+const SOUND_KEY = 'taut:sound:v1'
+
+export function isSoundOn(): boolean {
+  try {
+    return localStorage.getItem(SOUND_KEY) !== '0'
+  } catch {
+    return true
+  }
+}
+
+export function setSoundOn(on: boolean): void {
+  try {
+    localStorage.setItem(SOUND_KEY, on ? '1' : '0')
   } catch {
     // ignora
   }

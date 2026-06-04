@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
 import { ResultModal } from './ResultModal'
+
+// canvas-confetti precisa de canvas/matchMedia reais (ausentes no jsdom).
+vi.mock('canvas-confetti', () => ({ default: vi.fn() }))
 
 afterEach(cleanup)
 import type { Point, Puzzle, Score } from '../engine/types'

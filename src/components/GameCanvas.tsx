@@ -14,6 +14,7 @@ import {
 } from 'react'
 import type { Point, Puzzle, Score } from '../engine/types'
 import { samePoint } from '../engine/geometry'
+import { playTick, playComplete } from '../lib/sound'
 import { BoardBackground, BoardWaypoints } from './BoardSVG'
 
 interface GameCanvasProps {
@@ -92,7 +93,13 @@ export function GameCanvas({
   const prevLenRef = useRef(path.length)
   useEffect(() => {
     if (path.length > prevLenRef.current) {
-      vibrate(completed ? [10, 30, 10, 30, 16] : 6)
+      if (completed) {
+        vibrate([10, 30, 10, 30, 16])
+        playComplete()
+      } else {
+        vibrate(6)
+        playTick()
+      }
     }
     prevLenRef.current = path.length
   }, [path, completed])
