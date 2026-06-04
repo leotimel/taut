@@ -223,22 +223,25 @@ export function ResultModal({
       <div
         role="dialog"
         aria-modal="true"
-        className="flex max-h-[90svh] w-full max-w-sm flex-col items-center gap-4 overflow-y-auto rounded-3xl p-6 text-center shadow-2xl"
+        className="flex max-h-[90svh] w-full max-w-sm flex-col overflow-hidden rounded-3xl text-center shadow-2xl"
         style={{ background: 'var(--taut-grid)', color: 'var(--taut-text)' }}
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Fechar"
-          autoFocus
-          className="flex min-h-[44px] min-w-[44px] items-center justify-center self-end text-xl leading-none"
-          style={{ color: 'var(--taut-muted)' }}
-        >
-          ✕
-        </button>
+        <div className="flex shrink-0 justify-end px-4 pt-3">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            autoFocus
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center text-xl leading-none"
+            style={{ color: 'var(--taut-muted)' }}
+          >
+            ✕
+          </button>
+        </div>
 
-        {completed ? (
+        <div className="flex flex-1 flex-col items-center gap-4 overflow-y-auto px-6 pb-4">
+          {completed ? (
           <>
             <h2 className="text-2xl font-black">
               {atPar ? 'No ideal! 🎉' : 'Concluído! ✓'}
@@ -401,47 +404,52 @@ export function ResultModal({
           </div>
         </div>
 
-        <div className="text-sm" style={{ color: 'var(--taut-muted)' }}>
-          Próximo puzzle em{' '}
-          <span className="font-mono font-semibold" style={{ color: 'var(--taut-text)' }}>
-            {fmtCountdown(countdown)}
-          </span>
+          <div className="text-sm" style={{ color: 'var(--taut-muted)' }}>
+            Próximo puzzle em{' '}
+            <span className="font-mono font-semibold" style={{ color: 'var(--taut-text)' }}>
+              {fmtCountdown(countdown)}
+            </span>
+          </div>
         </div>
 
         {completed && (
-          <div className="flex w-full gap-3">
-            <button
-              type="button"
-              onClick={handleShareClick}
-              disabled={!onShare}
-              className="min-h-[44px] flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
-              style={{ background: 'var(--taut-path)', color: '#fff' }}
-            >
-              Compartilhar
-            </button>
-            <button
-              type="button"
-              onClick={handleChallengeClick}
-              disabled={!onChallenge}
-              className="min-h-[44px] flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
-              style={{
-                background: 'var(--taut-grid)',
-                color: 'var(--taut-text)',
-                border: '2px solid var(--taut-grid-line)',
-              }}
-            >
-              Desafiar amigo
-            </button>
-          </div>
-        )}
-
-        {toast && (
-          <p
-            className="text-sm font-semibold"
-            style={{ color: 'var(--taut-accent)' }}
+          <div
+            className="flex w-full shrink-0 flex-col gap-2 px-6 py-4"
+            style={{ borderTop: '1px solid var(--taut-grid-line)' }}
           >
-            {toast}
-          </p>
+            {toast && (
+              <p
+                className="text-sm font-semibold"
+                style={{ color: 'var(--taut-accent)' }}
+              >
+                {toast}
+              </p>
+            )}
+            <div className="flex w-full gap-3">
+              <button
+                type="button"
+                onClick={handleShareClick}
+                disabled={!onShare}
+                className="min-h-[44px] flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
+                style={{ background: 'var(--taut-path)', color: '#fff' }}
+              >
+                Compartilhar
+              </button>
+              <button
+                type="button"
+                onClick={handleChallengeClick}
+                disabled={!onChallenge}
+                className="min-h-[44px] flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
+                style={{
+                  background: 'var(--taut-grid)',
+                  color: 'var(--taut-text)',
+                  border: '2px solid var(--taut-grid-line)',
+                }}
+              >
+                Desafiar amigo
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
