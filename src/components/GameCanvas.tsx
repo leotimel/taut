@@ -1,28 +1,27 @@
 /**
- * GameCanvas — o tabuleiro jogável em SVG. Renderiza a grade, os números
- * (waypoints) e as paredes; intercepta ponteiro/toque pra desenhar o traçado
- * com snap nas células, validando cada passo com o engine.
- *
- * Importa só do engine (regra de arquitetura). Na Fase 3.2 o estado migra pro
- * hook useTaut; por ora o componente cuida do próprio caminho.
+ * GameCanvas — o tabuleiro jogável em SVG, CONTROLADO pelo hook useTaut.
+ * Renderiza a grade, os números (waypoints) e as paredes (barreiras de aresta);
+ * intercepta ponteiro/toque e reporta a célula-alvo via `onRoute`. Não guarda o
+ * caminho — só o ponteiro pra linha elástica. Importa só tipos do engine.
  */
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
-import type { Point, Puzzle } from '../engine/types'
-import { solve } from '../engine/solver'
-import { score } from '../engine/scorer'
-import { isLegalPath } from '../engine/validator'
-import { routeTo } from '../engine/route'
+import type { Point, Puzzle, Score } from '../engine/types'
 
 interface GameCanvasProps {
   puzzle: Puzzle
-  k?: number
+  path: Point[]
+  completed: boolean
+  par: Score | null
+  geometry: Score
+  elapsedMs: number
+  onRoute: (cell: Point) => void
+  onReset: () => void
 }
 
 const CELL = 100
@@ -37,40 +36,41 @@ function vibrate(pattern: number | number[]): void {
   }
 }
 
-export function GameCanvas({ puzzle, k = 2 }: GameCanvasProps) {
+function formatTime(ms: number): string {
+  const s = Math.floor(ms / 1000)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+export function GameCanvas({
+  puzzle,
+  path,
+  completed,
+  par,
+  geometry,
+  elapsedMs,
+  onRoute,
+  onReset,
+}: GameCanvasProps) {
   const { size, waypoints, walls } = puzzle
-  const lastWp = waypoints[waypoints.length - 1]
-
   const svgRef = useRef<SVGSVGElement>(null)
-
-  const [path, setPathState] = useState<Point[]>(() => [waypoints[0]])
-  const pathRef = useRef(path)
-  const setPath = useCallback((next: Point[]) => {
-    pathRef.current = next
-    setPathState(next)
-  }, [])
-
   const drawingRef = useRef(false)
   const [pointer, setPointer] = useState<Point | null>(null)
 
-  // Recomeça quando o puzzle muda (outro dia).
+  const atPar = completed && par !== null && geometry.total === par.total
+
+  // Vibração ao fixar/concluir segmentos (compara o tamanho do caminho).
+  const prevLenRef = useRef(path.length)
   useEffect(() => {
-    drawingRef.current = false
-    setPointer(null)
-    setPath([waypoints[0]])
-  }, [puzzle, waypoints, setPath])
+    if (path.length > prevLenRef.current) {
+      vibrate(completed ? [10, 30, 10, 30, 16] : 6)
+    }
+    prevLenRef.current = path.length
+  }, [path, completed])
 
-  const par = useMemo(() => solve(puzzle, k), [puzzle, k])
-  const current = useMemo(() => score(path, k), [path, k])
-  const completed = useMemo(() => isLegalPath(path, puzzle).legal, [path, puzzle])
-  const atPar = completed && par !== null && current.total === par.par.total
-
-  // Geometria de tela
   const span = PAD * 2 + size * CELL
   const cx = (x: number): number => PAD + x * CELL + CELL / 2
   const cy = (y: number): number => PAD + y * CELL + CELL / 2
 
-  /** Converte o evento de ponteiro em coordenadas do SVG (unidades do viewBox). */
   const toSvg = useCallback((e: ReactPointerEvent): Point | null => {
     const svg = svgRef.current
     const ctm = svg?.getScreenCTM()
@@ -79,7 +79,6 @@ export function GameCanvas({ puzzle, k = 2 }: GameCanvasProps) {
     return { x: dp.x, y: dp.y }
   }, [])
 
-  /** Célula da grade sob um ponto do SVG (ou null se fora). */
   const cellAt = useCallback(
     (svgPt: Point): Point | null => {
       const gx = Math.floor((svgPt.x - PAD) / CELL)
@@ -90,32 +89,7 @@ export function GameCanvas({ puzzle, k = 2 }: GameCanvasProps) {
     [size],
   )
 
-  const handleMove = useCallback(
-    (e: ReactPointerEvent) => {
-      if (!drawingRef.current) return
-      const svgPt = toSvg(e)
-      if (!svgPt) return
-      e.preventDefault()
-      // Para a linha elástica, guarda o ponto cru (limitado à área da grade).
-      const clamp = (v: number) => Math.max(PAD, Math.min(span - PAD, v))
-      setPointer({ x: clamp(svgPt.x), y: clamp(svgPt.y) })
-
-      const path = pathRef.current
-      if (isLegalPath(path, puzzle).legal) return // já concluído: trava
-
-      const cell = cellAt(svgPt)
-      if (!cell) return
-
-      const next = routeTo(path, cell, puzzle)
-      if (next === path) return // nada mudou
-      setPath(next)
-      if (next.length > path.length) {
-        const reachedFinal = samePoint(next[next.length - 1], lastWp)
-        vibrate(reachedFinal ? [10, 30, 10, 30, 16] : 6)
-      }
-    },
-    [toSvg, span, cellAt, puzzle, setPath, lastWp],
-  )
+  const clampToBoard = (v: number) => Math.max(PAD, Math.min(span - PAD, v))
 
   const handleDown = useCallback(
     (e: ReactPointerEvent) => {
@@ -123,35 +97,39 @@ export function GameCanvas({ puzzle, k = 2 }: GameCanvasProps) {
       if (!svgPt) return
       const cell = cellAt(svgPt)
       if (!cell) return
-      const path = pathRef.current
-      const last = path[path.length - 1]
-      if (samePoint(cell, last) && !isLegalPath(path, puzzle).legal) {
-        drawingRef.current = true // continua o traço de onde parou
+      const head = path[path.length - 1]
+      if (samePoint(cell, head) && !completed) {
+        drawingRef.current = true // continua de onde parou
       } else if (samePoint(cell, waypoints[0])) {
-        setPath([waypoints[0]]) // (re)começa no número 1
+        onReset() // (re)começa no número 1
         drawingRef.current = true
       } else {
         return
       }
       svgRef.current?.setPointerCapture(e.pointerId)
-      const clamp = (v: number) => Math.max(PAD, Math.min(span - PAD, v))
-      setPointer({ x: clamp(svgPt.x), y: clamp(svgPt.y) })
+      setPointer({ x: clampToBoard(svgPt.x), y: clampToBoard(svgPt.y) })
       e.preventDefault()
     },
-    [toSvg, cellAt, puzzle, waypoints, setPath, span],
+    [toSvg, cellAt, path, completed, waypoints, onReset],
+  )
+
+  const handleMove = useCallback(
+    (e: ReactPointerEvent) => {
+      if (!drawingRef.current) return
+      const svgPt = toSvg(e)
+      if (!svgPt) return
+      e.preventDefault()
+      setPointer({ x: clampToBoard(svgPt.x), y: clampToBoard(svgPt.y) })
+      const cell = cellAt(svgPt)
+      if (cell) onRoute(cell)
+    },
+    [toSvg, cellAt, onRoute],
   )
 
   const endStroke = useCallback(() => {
     drawingRef.current = false
     setPointer(null)
-    if (isLegalPath(pathRef.current, puzzle).legal) vibrate([12, 40, 12])
-  }, [puzzle])
-
-  const reset = useCallback(() => {
-    drawingRef.current = false
-    setPointer(null)
-    setPath([waypoints[0]])
-  }, [waypoints, setPath])
+  }, [])
 
   const pathPoints = path.map((p) => `${cx(p.x)},${cy(p.y)}`).join(' ')
   const head = path[path.length - 1]
@@ -163,15 +141,18 @@ export function GameCanvas({ puzzle, k = 2 }: GameCanvasProps) {
     >
       <div className="flex items-center gap-3 text-lg font-semibold">
         <span>
-          Caminho <span style={{ color: 'var(--taut-path)' }}>{current.total}</span>
+          Caminho{' '}
+          <span style={{ color: 'var(--taut-path)' }}>{geometry.total}</span>
         </span>
         <span style={{ color: 'var(--taut-muted)' }}>·</span>
         <span>
           Ideal{' '}
           <span style={{ color: 'var(--taut-muted)' }}>
-            {completed ? (par?.par.total ?? '—') : '🔒'}
+            {completed ? (par?.total ?? '—') : '🔒'}
           </span>
         </span>
+        <span style={{ color: 'var(--taut-muted)' }}>·</span>
+        <span style={{ color: 'var(--taut-muted)' }}>⏱ {formatTime(elapsedMs)}</span>
         {atPar ? (
           <span style={{ color: 'var(--taut-accent)' }}>Ideal! 🎉</span>
         ) : completed ? (
@@ -293,9 +274,13 @@ export function GameCanvas({ puzzle, k = 2 }: GameCanvasProps) {
 
       <button
         type="button"
-        onClick={reset}
+        onClick={onReset}
         className="rounded-full px-5 py-2 text-sm font-semibold transition active:scale-95"
-        style={{ background: 'var(--taut-grid)', color: 'var(--taut-text)', border: '2px solid var(--taut-grid-line)' }}
+        style={{
+          background: 'var(--taut-grid)',
+          color: 'var(--taut-text)',
+          border: '2px solid var(--taut-grid-line)',
+        }}
       >
         Recomeçar
       </button>

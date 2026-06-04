@@ -1,19 +1,8 @@
-import { useMemo } from 'react'
-import { generateDaily } from './engine/generator'
+import { useTaut } from './hooks/useTaut'
 import { GameCanvas } from './components/GameCanvas'
 
-/** Data de hoje no fuso local, no formato ISO `YYYY-MM-DD`. */
-function todayISO(): string {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
 export default function App() {
-  const date = todayISO()
-  const puzzle = useMemo(() => generateDaily(date), [date])
+  const taut = useTaut()
 
   return (
     <main
@@ -32,10 +21,19 @@ export default function App() {
         </p>
       </header>
 
-      <GameCanvas puzzle={puzzle} />
+      <GameCanvas
+        puzzle={taut.puzzle}
+        path={taut.path}
+        completed={taut.completed}
+        par={taut.par}
+        geometry={taut.geometry}
+        elapsedMs={taut.elapsedMs}
+        onRoute={taut.route}
+        onReset={taut.reset}
+      />
 
       <footer className="text-xs" style={{ color: 'var(--taut-muted)' }}>
-        {date}
+        {taut.date}
       </footer>
     </main>
   )
