@@ -7,6 +7,8 @@
  * pontuação (menor é melhor) enquanto o dia está aberto.
  */
 
+import type { Point } from '../engine/types'
+
 const STORAGE_KEY = 'taut:v1'
 
 export interface DayRecord {
@@ -175,6 +177,8 @@ export interface DaySession {
   completedAt: number | null
   /** Tentativas no dia (1 = primeira; cada "Recomeçar" com progresso soma 1). */
   attempts: number
+  /** Caminho em andamento — restaurado ao reabrir (não perde o traçado). */
+  path: Point[]
 }
 
 /** Carrega a sessão do dia; se não houver (ou for de outro dia), começa do zero. */
@@ -183,12 +187,20 @@ export function loadSession(date: string): DaySession {
     const raw = localStorage.getItem(SESSION_KEY)
     if (raw !== null) {
       const s = JSON.parse(raw) as DaySession
-      if (s !== null && s.date === date && typeof s.attempts === 'number') return s
+      if (s !== null && s.date === date && typeof s.attempts === 'number') {
+        return {
+          date: s.date,
+          startedAt: s.startedAt ?? null,
+          completedAt: s.completedAt ?? null,
+          attempts: s.attempts,
+          path: Array.isArray(s.path) ? s.path : [],
+        }
+      }
     }
   } catch {
     // ignora
   }
-  return { date, startedAt: null, completedAt: null, attempts: 1 }
+  return { date, startedAt: null, completedAt: null, attempts: 1, path: [] }
 }
 
 export function saveSession(session: DaySession): void {

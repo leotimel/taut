@@ -8,10 +8,7 @@
  * waypoint. Se nada muda, devolve o MESMO array (pra o chamador detectar no-op).
  */
 import type { Path, Point, Puzzle } from './types'
-import { edgeKey } from './geometry'
-
-const key = (p: Point): string => `${p.x},${p.y}`
-const samePoint = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y
+import { edgeKey, pointKey, samePoint } from './geometry'
 
 export function routeTo(path: Path, target: Point, puzzle: Puzzle): Path {
   if (path.length === 0) return path
@@ -30,11 +27,12 @@ export function routeTo(path: Path, target: Point, puzzle: Puzzle): Path {
 
   const wallSet = new Set(walls.map((w) => edgeKey(w.a, w.b)))
   const wpIndex = new Map<string, number>()
-  waypoints.forEach((w, i) => wpIndex.set(key(w), i))
+  waypoints.forEach((w, i) => wpIndex.set(pointKey(w), i))
 
-  const visited = new Set(path.map(key))
+  const visited = new Set(path.map(pointKey))
   let reached = 0
-  while (reached < waypoints.length && visited.has(key(waypoints[reached]))) reached++
+  while (reached < waypoints.length && visited.has(pointKey(waypoints[reached])))
+    reached++
 
   const lastWp = waypoints[waypoints.length - 1]
   const additions: Point[] = []
@@ -44,7 +42,7 @@ export function routeTo(path: Path, target: Point, puzzle: Puzzle): Path {
   while (!(curr.x === target.x && curr.y === target.y)) {
     const next: Point = { x: curr.x + dx, y: curr.y + dy }
     if (wallSet.has(edgeKey(curr, next))) break // parede na aresta
-    const nk = key(next)
+    const nk = pointKey(next)
     if (visited.has(nk)) break // auto-evitante
     const wi = wpIndex.get(nk)
     if (wi !== undefined && wi !== reached) break // waypoint fora de hora

@@ -11,6 +11,7 @@ import type { PointsBreakdown } from '../lib/points'
 import type { Stats } from '../lib/storage'
 import type { ShareResult } from '../lib/share'
 import { isLandmark, type LevelInfo } from '../lib/level'
+import { BoardBackground, BoardWaypoints } from './BoardSVG'
 
 interface ResultModalProps {
   open: boolean
@@ -74,7 +75,7 @@ function BoardReveal({
   playerPath: Point[]
   bestPath: Point[] | null
 }) {
-  const { size, waypoints, walls } = puzzle
+  const { size } = puzzle
   const span = PAD * 2 + size * CELL
   const cx = (x: number) => PAD + x * CELL + CELL / 2
   const cy = (y: number) => PAD + y * CELL + CELL / 2
@@ -86,52 +87,16 @@ function BoardReveal({
       className="h-auto w-full max-w-[260px] rounded-2xl"
       style={{ background: 'var(--taut-surface)' }}
     >
-      {Array.from({ length: size }).map((_, y) =>
-        Array.from({ length: size }).map((_, x) => (
-          <rect
-            key={`g-${x}-${y}`}
-            x={PAD + x * CELL + 2}
-            y={PAD + y * CELL + 2}
-            width={CELL - 4}
-            height={CELL - 4}
-            rx={6}
-            fill="var(--taut-grid)"
-            stroke="var(--taut-grid-line)"
-            strokeWidth={1}
-          />
-        )),
-      )}
-      {walls.map((w, i) => {
-        const horizontal = w.a.y === w.b.y
-        if (horizontal) {
-          const bx = PAD + Math.max(w.a.x, w.b.x) * CELL
-          return (
-            <line
-              key={`w-${i}`}
-              x1={bx}
-              y1={PAD + w.a.y * CELL + 3}
-              x2={bx}
-              y2={PAD + w.a.y * CELL + CELL - 3}
-              stroke="var(--taut-wall)"
-              strokeWidth={CELL * 0.14}
-              strokeLinecap="round"
-            />
-          )
-        }
-        const by = PAD + Math.max(w.a.y, w.b.y) * CELL
-        return (
-          <line
-            key={`w-${i}`}
-            x1={PAD + w.a.x * CELL + 3}
-            y1={by}
-            x2={PAD + w.a.x * CELL + CELL - 3}
-            y2={by}
-            stroke="var(--taut-wall)"
-            strokeWidth={CELL * 0.14}
-            strokeLinecap="round"
-          />
-        )
-      })}
+      <BoardBackground
+        puzzle={puzzle}
+        cell={CELL}
+        pad={PAD}
+        gridInset={2}
+        cellRx={6}
+        gridStroke={1}
+        wallInset={3}
+        wallWidth={CELL * 0.14}
+      />
       {playerPath.length >= 2 && (
         <polyline
           points={toStr(playerPath)}
@@ -155,29 +120,14 @@ function BoardReveal({
           style={{ ['--taut-len' as string]: '900' }}
         />
       )}
-      {waypoints.map((w, i) => (
-        <g key={`wp-${i}`}>
-          <circle
-            cx={cx(w.x)}
-            cy={cy(w.y)}
-            r={CELL * 0.28}
-            fill="var(--taut-wp)"
-            stroke="var(--taut-wp-ring)"
-            strokeWidth={2}
-          />
-          <text
-            x={cx(w.x)}
-            y={cy(w.y)}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={CELL * 0.34}
-            fontWeight={800}
-            fill="var(--taut-wp-text)"
-          >
-            {i + 1}
-          </text>
-        </g>
-      ))}
+      <BoardWaypoints
+        puzzle={puzzle}
+        cell={CELL}
+        pad={PAD}
+        rRatio={0.28}
+        ringWidth={2}
+        fontRatio={0.34}
+      />
     </svg>
   )
 }

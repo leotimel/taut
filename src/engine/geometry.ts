@@ -9,6 +9,16 @@ export function manhattan(a: Point, b: Point): number {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
 }
 
+/** Duas células ocupam a mesma posição? */
+export function samePoint(a: Point, b: Point): boolean {
+  return a.x === b.x && a.y === b.y
+}
+
+/** Chave de string de uma célula (`"x,y"`) — pra usar em Set/Map. */
+export function pointKey(p: Point): string {
+  return `${p.x},${p.y}`
+}
+
 /**
  * Duas células são ortogonalmente adjacentes quando estão a exatamente um passo
  * (cima/baixo/esquerda/direita) — ou seja, distância de Manhattan igual a 1.

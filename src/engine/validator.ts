@@ -3,7 +3,7 @@
  * e, em caso negativo, devolve o motivo. TypeScript puro, sem DOM.
  */
 import type { Path, Point, Puzzle } from './types'
-import { areOrthogonallyAdjacent, edgeKey } from './geometry'
+import { areOrthogonallyAdjacent, edgeKey, samePoint, pointKey } from './geometry'
 
 /** Motivo pelo qual um caminho é ilegal (uma regra por motivo). */
 export type InvalidReason =
@@ -17,9 +17,6 @@ export type InvalidReason =
 export type ValidationResult =
   | { legal: true }
   | { legal: false; reason: InvalidReason; at?: Point }
-
-const key = (p: Point): string => `${p.x},${p.y}`
-const samePoint = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y
 
 /**
  * `isLegalPath` valida um caminho COMPLETO contra um puzzle. Reporta a primeira
@@ -58,7 +55,7 @@ export function isLegalPath(path: Path, puzzle: Puzzle): ValidationResult {
     }
 
     // 4. Auto-evitante: nunca repete (nem cruza) uma célula.
-    const k = key(cell)
+    const k = pointKey(cell)
     if (seen.has(k)) {
       return { legal: false, reason: 'self-intersecting', at: cell }
     }

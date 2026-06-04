@@ -8,6 +8,9 @@
 /** Dia 1 do Taut — base pra numerar os puzzles ("Taut #N"). */
 export const TAUT_EPOCH = '2026-06-01'
 
+/** URL pública do jogo (entra no fim do texto de compartilhamento). */
+export const TAUT_URL = 'https://playtaut.vercel.app'
+
 function dayNumber(date: string): number {
   const [y, m, d] = date.split('-').map(Number)
   return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000)
@@ -50,7 +53,7 @@ export function buildShareText(params: ShareParams): string {
   const bar = '🟦'.repeat(filled) + '⬜'.repeat(5 - filled)
   return (
     `Taut #${n} · ${params.points} pts · ⏱${formatTime(params.elapsedMs)} · 🔥${params.streak}\n` +
-    bar
+    `${bar}\n${TAUT_URL}`
   )
 }
 

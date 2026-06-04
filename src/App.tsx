@@ -115,6 +115,7 @@ export default function App() {
         elapsedMs={taut.elapsedMs}
         onRoute={taut.route}
         onReset={taut.reset}
+        onUndo={taut.undo}
       />
 
       <footer className="text-xs" style={{ color: 'var(--taut-muted)' }}>

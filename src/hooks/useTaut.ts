@@ -59,7 +59,7 @@ export function useTaut(dateOverride?: string) {
     setAttempts(s.attempts)
     setStartedAt(s.startedAt)
     setCompletedAt(s.completedAt)
-    setPath([puzzle.waypoints[0]])
+    setPath(s.path.length > 0 ? s.path : [puzzle.waypoints[0]])
     setStats(getStats(date))
   }, [date, puzzle, setPath])
 
@@ -92,6 +92,7 @@ export function useTaut(dateOverride?: string) {
         startedAt: startedAt ?? finishedAt,
         completedAt: finishedAt,
         attempts,
+        path: pathRef.current,
       })
     }
     saveResult({
@@ -112,7 +113,10 @@ export function useTaut(dateOverride?: string) {
     completed && todayRecord !== undefined
       ? xpForDay(todayRecord.points ?? todayRecord.score, todayRecord.par)
       : 0
-  const leveledUp = completed && levelForXp(totalXp - todayXp).level < level.level
+  const leveledUp = useMemo(
+    () => completed && levelForXp(totalXp - todayXp).level < level.level,
+    [completed, totalXp, todayXp, level.level],
+  )
 
   /** Aplica o arrasto até `cell` (estende/retrocede); inicia o timer na 1ª vez. */
   const route = useCallback(
@@ -121,30 +125,32 @@ export function useTaut(dateOverride?: string) {
       const prev = pathRef.current
       const next = routeTo(prev, cell, puzzle)
       if (next === prev) return
-      if (startedAt === null) {
-        const t = Date.now()
-        setStartedAt(t)
-        saveSession({ date, startedAt: t, completedAt: null, attempts })
-      }
+      const t = startedAt ?? Date.now()
+      if (startedAt === null) setStartedAt(t)
       setPath(next)
+      saveSession({ date, startedAt: t, completedAt, attempts, path: next })
     },
-    [puzzle, startedAt, date, attempts, setPath],
+    [puzzle, startedAt, completedAt, date, attempts, setPath],
   )
 
   /** Desfaz o último segmento. */
   const undo = useCallback(() => {
     if (completedRef.current) return
     const prev = pathRef.current
-    if (prev.length > 1) setPath(prev.slice(0, -1))
-  }, [setPath])
+    if (prev.length <= 1) return
+    const next = prev.slice(0, -1)
+    setPath(next)
+    saveSession({ date, startedAt, completedAt, attempts, path: next })
+  }, [setPath, date, startedAt, completedAt, attempts])
 
   /** Recomeça do zero no mesmo dia; conta como tentativa se houve progresso. */
   const reset = useCallback(() => {
     const drew = pathRef.current.length > 1
     const nextAttempts = drew ? attempts + 1 : attempts
     if (drew) setAttempts(nextAttempts)
-    setPath([puzzle.waypoints[0]])
-    saveSession({ date, startedAt, completedAt, attempts: nextAttempts })
+    const fresh = [puzzle.waypoints[0]]
+    setPath(fresh)
+    saveSession({ date, startedAt, completedAt, attempts: nextAttempts, path: fresh })
   }, [puzzle, startedAt, completedAt, attempts, date, setPath])
 
   return {

@@ -1,8 +1,8 @@
 /**
  * GameCanvas — o tabuleiro jogável em SVG, CONTROLADO pelo hook useTaut.
- * Renderiza a grade, os números (waypoints) e as paredes (barreiras de aresta);
- * intercepta ponteiro/toque e reporta a célula-alvo via `onRoute`. Não guarda o
- * caminho — só o ponteiro pra linha elástica. Importa só tipos do engine.
+ * Renderiza grade/paredes/números (via BoardSVG) e o traçado; intercepta
+ * ponteiro/toque E teclado (setas) e reporta a célula-alvo via `onRoute`. Não
+ * guarda o caminho — só o ponteiro pra linha elástica.
  */
 import {
   useCallback,
@@ -10,8 +10,11 @@ import {
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import type { Point, Puzzle, Score } from '../engine/types'
+import { samePoint } from '../engine/geometry'
+import { BoardBackground, BoardWaypoints } from './BoardSVG'
 
 interface GameCanvasProps {
   puzzle: Puzzle
@@ -22,13 +25,12 @@ interface GameCanvasProps {
   elapsedMs: number
   onRoute: (cell: Point) => void
   onReset: () => void
+  onUndo?: () => void
 }
 
 const CELL = 100
 const PAD = 18
 const INSET = 6 // recuo das células pro visual com "gap"
-
-const samePoint = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y
 
 function vibrate(pattern: number | number[]): void {
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
@@ -41,6 +43,13 @@ function formatTime(ms: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
+const KEY_DIRS: Record<string, Point> = {
+  ArrowUp: { x: 0, y: -1 },
+  ArrowDown: { x: 0, y: 1 },
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },
+}
+
 export function GameCanvas({
   puzzle,
   path,
@@ -50,8 +59,9 @@ export function GameCanvas({
   elapsedMs,
   onRoute,
   onReset,
+  onUndo,
 }: GameCanvasProps) {
-  const { size, waypoints, walls } = puzzle
+  const { size, waypoints } = puzzle
   const svgRef = useRef<SVGSVGElement>(null)
   const drawingRef = useRef(false)
   const [pointer, setPointer] = useState<Point | null>(null)
@@ -131,6 +141,23 @@ export function GameCanvas({
     setPointer(null)
   }, [])
 
+  // Teclado: setas estendem/voltam o traçado; Backspace desfaz.
+  const handleKey = useCallback(
+    (e: ReactKeyboardEvent) => {
+      if (completed) return
+      const head = path[path.length - 1]
+      const d = KEY_DIRS[e.key]
+      if (d) {
+        e.preventDefault()
+        onRoute({ x: head.x + d.x, y: head.y + d.y })
+      } else if (e.key === 'Backspace') {
+        e.preventDefault()
+        onUndo?.()
+      }
+    },
+    [completed, path, onRoute, onUndo],
+  )
+
   const pathPoints = path.map((p) => `${cx(p.x)},${cy(p.y)}`).join(' ')
   const head = path[path.length - 1]
 
@@ -164,63 +191,26 @@ export function GameCanvas({
         ref={svgRef}
         viewBox={`0 0 ${span} ${span}`}
         role="application"
-        aria-label="Tabuleiro do Taut — arraste para ligar os números em ordem"
-        className="h-auto w-full max-w-[min(90vw,520px)] rounded-3xl"
+        tabIndex={0}
+        aria-label="Tabuleiro do Taut — arraste ou use as setas para ligar os números em ordem"
+        className="h-auto w-full max-w-[min(90vw,520px)] rounded-3xl focus-visible:[outline:3px_solid_var(--taut-path)] focus-visible:[outline-offset:2px]"
         style={{ touchAction: 'none', background: 'var(--taut-surface)' }}
         onPointerDown={handleDown}
         onPointerMove={handleMove}
         onPointerUp={endStroke}
         onPointerCancel={endStroke}
+        onKeyDown={handleKey}
       >
-        {/* Grade */}
-        {Array.from({ length: size }).map((_, y) =>
-          Array.from({ length: size }).map((_, x) => (
-            <rect
-              key={`g-${x}-${y}`}
-              x={PAD + x * CELL + INSET}
-              y={PAD + y * CELL + INSET}
-              width={CELL - INSET * 2}
-              height={CELL - INSET * 2}
-              rx={14}
-              fill="var(--taut-grid)"
-              stroke="var(--taut-grid-line)"
-              strokeWidth={2}
-            />
-          )),
-        )}
-
-        {/* Paredes — barreiras na aresta entre duas células */}
-        {walls.map((w, i) => {
-          const horizontal = w.a.y === w.b.y // vizinhos na horizontal → barra vertical
-          if (horizontal) {
-            const bx = PAD + Math.max(w.a.x, w.b.x) * CELL
-            return (
-              <line
-                key={`w-${i}`}
-                x1={bx}
-                y1={PAD + w.a.y * CELL + INSET}
-                x2={bx}
-                y2={PAD + w.a.y * CELL + CELL - INSET}
-                stroke="var(--taut-wall)"
-                strokeWidth={CELL * 0.16}
-                strokeLinecap="round"
-              />
-            )
-          }
-          const by = PAD + Math.max(w.a.y, w.b.y) * CELL
-          return (
-            <line
-              key={`w-${i}`}
-              x1={PAD + w.a.x * CELL + INSET}
-              y1={by}
-              x2={PAD + w.a.x * CELL + CELL - INSET}
-              y2={by}
-              stroke="var(--taut-wall)"
-              strokeWidth={CELL * 0.16}
-              strokeLinecap="round"
-            />
-          )
-        })}
+        <BoardBackground
+          puzzle={puzzle}
+          cell={CELL}
+          pad={PAD}
+          gridInset={INSET}
+          cellRx={14}
+          gridStroke={2}
+          wallInset={INSET}
+          wallWidth={CELL * 0.16}
+        />
 
         {/* Caminho traçado */}
         {path.length >= 2 && (
@@ -261,30 +251,14 @@ export function GameCanvas({
           />
         )}
 
-        {/* Waypoints (números) */}
-        {waypoints.map((w, i) => (
-          <g key={`wp-${i}`}>
-            <circle
-              cx={cx(w.x)}
-              cy={cy(w.y)}
-              r={CELL * 0.32}
-              fill="var(--taut-wp)"
-              stroke="var(--taut-wp-ring)"
-              strokeWidth={4}
-            />
-            <text
-              x={cx(w.x)}
-              y={cy(w.y)}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize={CELL * 0.4}
-              fontWeight={800}
-              fill="var(--taut-wp-text)"
-            >
-              {i + 1}
-            </text>
-          </g>
-        ))}
+        <BoardWaypoints
+          puzzle={puzzle}
+          cell={CELL}
+          pad={PAD}
+          rRatio={0.32}
+          ringWidth={4}
+          fontRatio={0.4}
+        />
       </svg>
 
       <button
