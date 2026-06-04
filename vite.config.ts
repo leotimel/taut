@@ -34,5 +34,8 @@ export default defineConfig({
     // jsdom com `// @vitest-environment jsdom` no topo do arquivo.
     environment: 'node',
     setupFiles: './src/test/setup.ts',
+    // Folga pros testes do solver/gerador sob instrumentação de cobertura (v8),
+    // que os deixa ~3–4× mais lentos. Runs normais terminam bem antes disso.
+    testTimeout: 20000,
   },
 })
