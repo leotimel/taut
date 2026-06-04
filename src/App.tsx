@@ -6,6 +6,7 @@ import { buildShareText, share } from './lib/share'
 import { buildChallengeUrl, parseChallenge } from './lib/challenge'
 import { Onboarding } from './components/Onboarding'
 import { hasSeenOnboarding, markOnboardingSeen } from './lib/storage'
+import { Analytics } from '@vercel/analytics/react'
 
 export default function App() {
   const taut = useTaut()
@@ -140,6 +141,7 @@ export default function App() {
       />
 
       <Onboarding open={onboardingOpen} onClose={closeOnboarding} />
+      <Analytics />
     </main>
   )
 }
