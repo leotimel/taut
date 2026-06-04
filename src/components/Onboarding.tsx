@@ -4,6 +4,8 @@
  * desenhando em loop). "Entendi" fecha; o "?" no cabeçalho reabre.
  */
 
+import { useEffect } from 'react'
+
 interface OnboardingProps {
   open: boolean
   onClose: () => void
@@ -92,6 +94,15 @@ function Example() {
 }
 
 export function Onboarding({ open, onClose }: OnboardingProps) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
   if (!open) return null
   return (
     <div
@@ -118,7 +129,8 @@ export function Onboarding({ open, onClose }: OnboardingProps) {
         <button
           type="button"
           onClick={onClose}
-          className="rounded-full px-6 py-2 text-sm font-bold transition active:scale-95"
+          autoFocus
+          className="min-h-[44px] rounded-full px-6 py-2 text-sm font-bold transition active:scale-95"
           style={{ background: 'var(--taut-path)', color: '#fff' }}
         >
           Entendi

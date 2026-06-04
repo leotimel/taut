@@ -48,7 +48,7 @@ export default function App() {
           type="button"
           onClick={() => setOnboardingOpen(true)}
           aria-label="Como jogar"
-          className="absolute top-0 left-0 rounded-full px-3 py-1 text-lg font-bold transition active:scale-95"
+          className="absolute top-0 left-0 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-lg font-bold transition active:scale-95"
           style={{ background: 'var(--taut-grid)', border: '2px solid var(--taut-grid-line)' }}
         >
           ?
@@ -57,7 +57,7 @@ export default function App() {
           type="button"
           onClick={() => setModalOpen(true)}
           aria-label="Estatísticas"
-          className="absolute top-0 right-0 rounded-full px-3 py-1 text-lg transition active:scale-95"
+          className="absolute top-0 right-0 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-lg transition active:scale-95"
           style={{ background: 'var(--taut-grid)', border: '2px solid var(--taut-grid-line)' }}
         >
           📊
@@ -71,6 +71,18 @@ export default function App() {
         <p className="text-sm" style={{ color: 'var(--taut-muted)' }}>
           Ligue os números em ordem · contorne as paredes · chegue no ideal
         </p>
+        <div className="mt-2 flex justify-center">
+          <span
+            className="rounded-full px-3 py-1 text-xs font-bold"
+            style={{
+              background: 'var(--taut-grid)',
+              border: '2px solid var(--taut-grid-line)',
+              color: 'var(--taut-text)',
+            }}
+          >
+            Nv {taut.level.level} · {taut.level.codename}
+          </span>
+        </div>
       </header>
 
       {challenge && challenge.date === taut.date && (
@@ -120,6 +132,9 @@ export default function App() {
         elapsedMs={taut.elapsedMs}
         points={taut.points}
         stats={taut.stats}
+        level={taut.level}
+        todayXp={taut.todayXp}
+        leveledUp={taut.leveledUp}
         onShare={handleShare}
         onChallenge={handleChallenge}
       />

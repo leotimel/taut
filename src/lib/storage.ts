@@ -18,6 +18,8 @@ export interface DayRecord {
   par: number
   /** O jogador concluiu o puzzle (ligou todos os números em ordem). */
   completed: boolean
+  /** Melhor pontos do dia (geometria + tempo + tentativas). Alimenta o XP. */
+  points?: number
 }
 
 export interface Stats {
@@ -44,7 +46,9 @@ function isValidRecord(r: unknown): r is DayRecord {
     typeof (r as DayRecord).date === 'string' &&
     typeof (r as DayRecord).score === 'number' &&
     typeof (r as DayRecord).par === 'number' &&
-    typeof (r as DayRecord).completed === 'boolean'
+    typeof (r as DayRecord).completed === 'boolean' &&
+    ((r as DayRecord).points === undefined ||
+      typeof (r as DayRecord).points === 'number')
   )
 }
 
@@ -94,6 +98,12 @@ export function saveResult(record: DayRecord): void {
       existing.score = existing.completed
         ? Math.min(existing.score, record.score)
         : record.score
+      if (record.points !== undefined) {
+        existing.points =
+          existing.points !== undefined
+            ? Math.min(existing.points, record.points)
+            : record.points
+      }
       existing.completed = true
     }
   }

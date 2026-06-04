@@ -27,6 +27,18 @@ export interface GeneratorConfig {
   maxAttempts: number
 }
 
+/**
+ * Calibração padrão — a SUPERFÍCIE DE TUNING do jogo. Valores escolhidos por
+ * medição empírica; limites importantes:
+ * - `size` fica em **6**: o solver exato é instantâneo no 6×6, mas estoura no
+ *   7×7 (um único solve chega a ~380 ms e a geração a dezenas de segundos).
+ * - `waypointCount` em **4**: mais waypoints encurtam as pernas e ESMAGAM o gap
+ *   (com 5, o gap trava em ~2), matando a otimização que é o coração do jogo.
+ * - `wallCount`/`threshold` são as alavancas de dificuldade (a rampa sobe estes,
+ *   ver `rampForDay`). No 6×6 com 4 waypoints o teto de gap fica ~6–10, então
+ *   `threshold` acima de ~8 começa a cair em fallback.
+ * - `k` (peso das curvas) deve casar com o resto do app (scorer/pontos).
+ */
 export const DEFAULT_CONFIG: GeneratorConfig = {
   size: 6,
   waypointCount: 4,
@@ -35,6 +47,32 @@ export const DEFAULT_CONFIG: GeneratorConfig = {
   threshold: 6,
   minParLength: 8,
   maxAttempts: 800,
+}
+
+/** Dia 1 da rampa (mesma data-base do "Taut #N" em `lib/share`). */
+export const RAMP_EPOCH = '2026-06-01'
+
+function daysSinceUnixEpoch(date: string): number {
+  const [y, m, d] = date.split('-').map(Number)
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000)
+}
+
+/** Índice do dia (0 = RAMP_EPOCH; antes da época, 0). */
+function dayIndex(date: string): number {
+  return Math.max(0, daysSinceUnixEpoch(date) - daysSinceUnixEpoch(RAMP_EPOCH))
+}
+
+/**
+ * Rampa de dificuldade: a DENSIDADE DE PAREDES sobe devagar com o tempo (grade
+ * fixa em 6×6). O `threshold` NÃO sobe — medimos que no 6×6 com 4 waypoints o
+ * gap raramente passa de 6, então threshold > 6 cairia em fallback (geração
+ * lenta). Mais paredes deixam o labirinto mais fechado/torto sem quebrar a
+ * geração. Teto verificado por diagnóstico numa faixa de dias.
+ */
+export function rampForDay(i: number): Pick<GeneratorConfig, 'wallCount'> {
+  return {
+    wallCount: Math.min(11, 8 + Math.floor(i / 28)), // +1 a cada ~4 semanas, teto 11
+  }
 }
 
 type RNG = () => number
@@ -137,7 +175,7 @@ export function generateDaily(
   date: string,
   config: Partial<GeneratorConfig> = {},
 ): Puzzle {
-  const cfg = { ...DEFAULT_CONFIG, ...config }
+  const cfg = { ...DEFAULT_CONFIG, ...rampForDay(dayIndex(date)), ...config }
   const seed = hashStringToSeed(date)
   const rng = mulberry32(seed)
 

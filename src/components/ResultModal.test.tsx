@@ -7,6 +7,7 @@ afterEach(cleanup)
 import type { Point, Puzzle, Score } from '../engine/types'
 import type { PointsBreakdown } from '../lib/points'
 import type { Stats } from '../lib/storage'
+import { levelForXp } from '../lib/level'
 
 const p = (x: number, y: number): Point => ({ x, y })
 
@@ -41,6 +42,9 @@ const base = {
   elapsedMs: 65_000,
   points,
   stats,
+  level: levelForXp(0),
+  todayXp: 0,
+  leveledUp: false,
 }
 
 describe('ResultModal', () => {

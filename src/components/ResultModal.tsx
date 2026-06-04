@@ -10,6 +10,7 @@ import type { Point, Puzzle, Score } from '../engine/types'
 import type { PointsBreakdown } from '../lib/points'
 import type { Stats } from '../lib/storage'
 import type { ShareResult } from '../lib/share'
+import { isLandmark, type LevelInfo } from '../lib/level'
 
 interface ResultModalProps {
   open: boolean
@@ -23,6 +24,9 @@ interface ResultModalProps {
   elapsedMs: number
   points: PointsBreakdown
   stats: Stats
+  level: LevelInfo
+  todayXp: number
+  leveledUp: boolean
   onShare?: () => Promise<ShareResult> | void
   onChallenge?: () => Promise<ShareResult> | void
 }
@@ -141,13 +145,14 @@ function BoardReveal({
       )}
       {bestPath && bestPath.length >= 2 && (
         <polyline
+          className="taut-reveal"
           points={toStr(bestPath)}
           fill="none"
           stroke="var(--taut-accent)"
-          strokeWidth={CELL * 0.16}
+          strokeWidth={CELL * 0.18}
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray="1 6"
+          style={{ ['--taut-len' as string]: '900' }}
         />
       )}
       {waypoints.map((w, i) => (
@@ -202,11 +207,35 @@ export function ResultModal({
   elapsedMs,
   points,
   stats,
+  level,
+  todayXp,
+  leveledUp,
   onShare,
   onChallenge,
 }: ResultModalProps) {
   const countdown = useCountdown(open)
   const [toast, setToast] = useState<string | null>(null)
+  const [barW, setBarW] = useState('0%')
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
+  useEffect(() => {
+    if (!open) {
+      setBarW('0%')
+      return
+    }
+    const pct = Math.min(100, Math.round((level.xpInLevel / level.xpForNext) * 100))
+    const id = setTimeout(() => setBarW(`${pct}%`), 60)
+    return () => clearTimeout(id)
+  }, [open, level])
+
   if (!open) return null
 
   const atPar = completed && par !== null && geometry.total === par.total
@@ -243,7 +272,8 @@ export function ResultModal({
           type="button"
           onClick={onClose}
           aria-label="Fechar"
-          className="self-end text-xl leading-none"
+          autoFocus
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center self-end text-xl leading-none"
           style={{ color: 'var(--taut-muted)' }}
         >
           ✕
@@ -276,7 +306,7 @@ export function ResultModal({
             />
             <p className="text-xs" style={{ color: 'var(--taut-muted)' }}>
               <span style={{ color: 'var(--taut-path)' }}>━</span> seu traçado ·{' '}
-              <span style={{ color: 'var(--taut-accent)' }}>┄</span> o ideal
+              <span style={{ color: 'var(--taut-accent)' }}>━</span> o ideal
             </p>
 
             <div className="flex w-full items-center justify-around rounded-2xl py-3" style={{ background: 'var(--taut-surface)' }}>
@@ -305,6 +335,42 @@ export function ResultModal({
           <Stat label="no ideal" value={stats.parCount} />
         </div>
 
+        {/* Nível & barra de XP */}
+        <div className="w-full">
+          <div className="mb-1 flex items-center justify-between text-xs">
+            <span className="font-semibold" style={{ color: 'var(--taut-text)' }}>
+              Nv {level.level} · {level.codename}
+            </span>
+            {completed && todayXp > 0 && (
+              <span style={{ color: 'var(--taut-accent)' }}>+{todayXp} XP</span>
+            )}
+          </div>
+          <div
+            className="h-3 w-full overflow-hidden rounded-full"
+            style={{ background: 'var(--taut-surface)' }}
+          >
+            <div
+              className="taut-xpfill h-full rounded-full"
+              style={{ width: barW, background: 'var(--taut-path)' }}
+            />
+          </div>
+          <div
+            className="mt-1 text-right text-[10px]"
+            style={{ color: 'var(--taut-muted)' }}
+          >
+            {level.xpInLevel}/{level.xpForNext} XP
+          </div>
+          {leveledUp && (
+            <p
+              className="mt-2 text-center text-sm font-bold"
+              style={{ color: 'var(--taut-accent)' }}
+            >
+              ⬆️ Subiu pro Nível {level.level}
+              {isLandmark(level.level) ? ` · ${level.codename}! 🌌` : '!'}
+            </p>
+          )}
+        </div>
+
         <div className="text-sm" style={{ color: 'var(--taut-muted)' }}>
           Próximo puzzle em{' '}
           <span className="font-mono font-semibold" style={{ color: 'var(--taut-text)' }}>
@@ -318,7 +384,7 @@ export function ResultModal({
               type="button"
               onClick={handleShareClick}
               disabled={!onShare}
-              className="flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
+              className="min-h-[44px] flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
               style={{ background: 'var(--taut-path)', color: '#fff' }}
             >
               Compartilhar
@@ -327,7 +393,7 @@ export function ResultModal({
               type="button"
               onClick={handleChallengeClick}
               disabled={!onChallenge}
-              className="flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
+              className="min-h-[44px] flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
               style={{
                 background: 'var(--taut-grid)',
                 color: 'var(--taut-text)',

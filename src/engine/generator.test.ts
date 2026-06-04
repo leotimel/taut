@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { generateDaily, analyzePuzzle, DEFAULT_CONFIG } from './generator'
+import {
+  generateDaily,
+  analyzePuzzle,
+  rampForDay,
+  DEFAULT_CONFIG,
+} from './generator'
 import { solve } from './solver'
 import { hashStringToSeed } from './rng'
 import { manhattan, edgeKey } from './geometry'
@@ -29,6 +34,22 @@ describe('generateDaily', () => {
   it('respeita overrides de config', () => {
     const pz = generateDaily('2026-06-03', { waypointCount: 3 })
     expect(pz.waypoints).toHaveLength(3)
+  })
+
+  describe('rampForDay (rampa de dificuldade)', () => {
+    it('começa em 8 paredes e sobe devagar até o teto 11', () => {
+      expect(rampForDay(0).wallCount).toBe(8)
+      expect(rampForDay(28).wallCount).toBe(9)
+      expect(rampForDay(300).wallCount).toBe(11)
+    })
+    it('é monotônica não-decrescente', () => {
+      let prev = 0
+      for (let i = 0; i < 400; i += 7) {
+        const w = rampForDay(i).wallCount
+        expect(w).toBeGreaterThanOrEqual(prev)
+        prev = w
+      }
+    })
   })
 
   describe('uma semana de tabuleiros é válida, solúvel e não-trivial', () => {

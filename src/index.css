@@ -45,10 +45,57 @@ body {
   animation: taut-draw 2.6s ease-in-out infinite;
 }
 
+/* Revelação do ideal no modal: a linha se desenha uma vez. */
+@keyframes taut-reveal {
+  from {
+    stroke-dashoffset: var(--taut-len, 900);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.taut-reveal {
+  stroke-dasharray: var(--taut-len, 900);
+  animation: taut-reveal 0.9s ease-out forwards;
+}
+
+/* Pulso sutil no ponto ativo do traçado (feedback de "ponta viva"). */
+@keyframes taut-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.45;
+  }
+}
+
+.taut-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: taut-pulse 1.2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .taut-draw {
+  .taut-draw,
+  .taut-reveal,
+  .taut-pulse {
     animation: none;
     stroke-dashoffset: 0;
+  }
+}
+
+/* Barra de XP: a largura cresce animada ao abrir o resultado. */
+.taut-xpfill {
+  transition: width 0.8s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .taut-xpfill {
+    transition: none;
   }
 }
 

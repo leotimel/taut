@@ -20,6 +20,7 @@ import {
   saveSession,
   type Stats,
 } from '../lib/storage'
+import { xpForDay, levelForXp, totalXpFromHistory } from '../lib/level'
 
 const K = 2
 
@@ -98,9 +99,20 @@ export function useTaut(dateOverride?: string) {
       score: geometry.total,
       par: par?.total ?? geometry.total,
       completed: true,
+      points: points.total,
     })
     setStats(getStats(date))
-  }, [completed, completedAt, date, startedAt, attempts, geometry.total, par])
+  }, [completed, completedAt, date, startedAt, attempts, geometry.total, par, points.total])
+
+  // Nível & XP (derivados do histórico). `leveledUp` compara antes/depois de hoje.
+  const totalXp = useMemo(() => totalXpFromHistory(stats.history), [stats])
+  const level = useMemo(() => levelForXp(totalXp), [totalXp])
+  const todayRecord = stats.history.find((r) => r.date === date)
+  const todayXp =
+    completed && todayRecord !== undefined
+      ? xpForDay(todayRecord.points ?? todayRecord.score, todayRecord.par)
+      : 0
+  const leveledUp = completed && levelForXp(totalXp - todayXp).level < level.level
 
   /** Aplica o arrasto até `cell` (estende/retrocede); inicia o timer na 1ª vez. */
   const route = useCallback(
@@ -147,6 +159,9 @@ export function useTaut(dateOverride?: string) {
     elapsedMs,
     points,
     stats,
+    level,
+    todayXp,
+    leveledUp,
     route,
     undo,
     reset,

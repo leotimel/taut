@@ -163,6 +163,8 @@ export function GameCanvas({
       <svg
         ref={svgRef}
         viewBox={`0 0 ${span} ${span}`}
+        role="application"
+        aria-label="Tabuleiro do Taut — arraste para ligar os números em ordem"
         className="h-auto w-full max-w-[min(90vw,520px)] rounded-3xl"
         style={{ touchAction: 'none', background: 'var(--taut-surface)' }}
         onPointerDown={handleDown}
@@ -246,6 +248,19 @@ export function GameCanvas({
           />
         )}
 
+        {/* Ponta viva do traçado (feedback de onde você está) */}
+        {!completed && head && (
+          <circle
+            className="taut-pulse"
+            cx={cx(head.x)}
+            cy={cy(head.y)}
+            r={CELL * 0.42}
+            fill="none"
+            stroke="var(--taut-path)"
+            strokeWidth={4}
+          />
+        )}
+
         {/* Waypoints (números) */}
         {waypoints.map((w, i) => (
           <g key={`wp-${i}`}>
@@ -275,7 +290,7 @@ export function GameCanvas({
       <button
         type="button"
         onClick={onReset}
-        className="rounded-full px-5 py-2 text-sm font-semibold transition active:scale-95"
+        className="min-h-[44px] rounded-full px-5 py-2 text-sm font-semibold transition active:scale-95"
         style={{
           background: 'var(--taut-grid)',
           color: 'var(--taut-text)',
