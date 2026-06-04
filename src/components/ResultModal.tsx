@@ -8,10 +8,11 @@
 import { useEffect, useState } from 'react'
 import type { Point, Puzzle, Score } from '../engine/types'
 import type { PointsBreakdown } from '../lib/points'
-import { STREAK_MILESTONES, type Stats } from '../lib/storage'
+import { STREAK_MILESTONES, type Stats, type DayRecord } from '../lib/storage'
 import type { ShareResult } from '../lib/share'
 import { isLandmark, type LevelInfo } from '../lib/level'
 import { PALETTES } from '../lib/palettes'
+import { ACHIEVEMENTS, unlockedCount, isUnlocked } from '../lib/achievements'
 import { BoardBackground, BoardWaypoints } from './BoardSVG'
 
 interface ResultModalProps {
@@ -148,6 +149,44 @@ function Stat({ label, value }: { label: string; value: number | string }) {
   )
 }
 
+/** Histograma da "precisão": quantos dias você ficou no ideal, +1, +2, +3, +4+. */
+function GapHistogram({ history }: { history: DayRecord[] }) {
+  const labels = ['ideal', '+1', '+2', '+3', '+4+']
+  const buckets = [0, 0, 0, 0, 0]
+  for (const r of history) {
+    if (!r.completed) continue
+    buckets[Math.min(4, Math.max(0, r.score - r.par))]++
+  }
+  const max = Math.max(1, ...buckets)
+  return (
+    <div className="w-full">
+      <div className="mb-1 text-xs font-semibold" style={{ color: 'var(--taut-text)' }}>
+        Sua precisão
+      </div>
+      <div className="flex h-16 items-end justify-around gap-1">
+        {buckets.map((c, i) => (
+          <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1">
+            <span className="text-[9px]" style={{ color: 'var(--taut-muted)' }}>
+              {c}
+            </span>
+            <div
+              className="w-full rounded-t"
+              style={{
+                height: `${(c / max) * 100}%`,
+                minHeight: c > 0 ? 4 : 1,
+                background: i === 0 ? 'var(--taut-accent)' : 'var(--taut-path)',
+              }}
+            />
+            <span className="text-[9px]" style={{ color: 'var(--taut-muted)' }}>
+              {labels[i]}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function ResultModal({
   open,
   onClose,
@@ -198,6 +237,7 @@ export function ResultModal({
     completed && STREAK_MILESTONES.includes(stats.currentStreak)
       ? stats.currentStreak
       : null
+  const achCtx = { stats, level: level.level }
 
   const flash = (msg: string) => {
     setToast(msg)
@@ -347,6 +387,42 @@ export function ResultModal({
               {isLandmark(level.level) ? ` · ${level.codename}! 🌌` : '!'}
             </p>
           )}
+        </div>
+
+        {/* Precisão (histograma) */}
+        {stats.daysPlayed > 0 && <GapHistogram history={stats.history} />}
+
+        {/* Conquistas */}
+        <div className="w-full">
+          <div
+            className="mb-1 flex items-center justify-between text-xs font-semibold"
+            style={{ color: 'var(--taut-text)' }}
+          >
+            <span>Conquistas</span>
+            <span style={{ color: 'var(--taut-muted)' }}>
+              {unlockedCount(achCtx)}/{ACHIEVEMENTS.length}
+            </span>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {ACHIEVEMENTS.map((a) => {
+              const got = isUnlocked(a, achCtx)
+              return (
+                <div
+                  key={a.id}
+                  title={`${a.name} — ${a.desc}`}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-lg"
+                  style={{
+                    background: 'var(--taut-surface)',
+                    border: '2px solid var(--taut-grid-line)',
+                    opacity: got ? 1 : 0.35,
+                    filter: got ? 'none' : 'grayscale(1)',
+                  }}
+                >
+                  {a.icon}
+                </div>
+              )
+            })}
+          </div>
         </div>
 
         {/* Temas (paletas desbloqueáveis por nível) */}
