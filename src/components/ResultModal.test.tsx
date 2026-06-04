@@ -30,6 +30,7 @@ const stats: Stats = {
   bestStreak: 5,
   daysPlayed: 7,
   parCount: 4,
+  freezes: 0,
   history: [],
 }
 const base = {
@@ -45,6 +46,8 @@ const base = {
   level: levelForXp(0),
   todayXp: 0,
   leveledUp: false,
+  paletteId: 'sunset',
+  onSelectPalette: () => {},
 }
 
 describe('ResultModal', () => {

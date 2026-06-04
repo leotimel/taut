@@ -5,7 +5,13 @@ import { ResultModal } from './components/ResultModal'
 import { buildShareText, share } from './lib/share'
 import { buildChallengeUrl, parseChallenge } from './lib/challenge'
 import { Onboarding } from './components/Onboarding'
-import { hasSeenOnboarding, markOnboardingSeen } from './lib/storage'
+import {
+  hasSeenOnboarding,
+  markOnboardingSeen,
+  getPaletteId,
+  setPaletteId,
+} from './lib/storage'
+import { applyPalette } from './lib/palettes'
 import { Analytics } from '@vercel/analytics/react'
 
 export default function App() {
@@ -13,10 +19,20 @@ export default function App() {
   const [modalOpen, setModalOpen] = useState(false)
   const [challenge] = useState(() => parseChallenge())
   const [onboardingOpen, setOnboardingOpen] = useState(() => !hasSeenOnboarding())
+  const [paletteId, setPaletteIdState] = useState(() => getPaletteId())
+
+  useEffect(() => {
+    applyPalette(paletteId)
+  }, [paletteId])
 
   const closeOnboarding = () => {
     markOnboardingSeen()
     setOnboardingOpen(false)
+  }
+
+  const selectPalette = (id: string) => {
+    setPaletteId(id)
+    setPaletteIdState(id)
   }
 
   // Abre o painel automaticamente ao concluir.
@@ -137,6 +153,8 @@ export default function App() {
         level={taut.level}
         todayXp={taut.todayXp}
         leveledUp={taut.leveledUp}
+        paletteId={paletteId}
+        onSelectPalette={selectPalette}
         onShare={handleShare}
         onChallenge={handleChallenge}
       />

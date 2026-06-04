@@ -57,6 +57,25 @@ describe('storage', () => {
     expect(getStats('2026-06-03').currentStreak).toBe(0)
   })
 
+  it('escudo: tolera um dia pulado quando há ≥10 dias concluídos', () => {
+    for (let d = 1; d <= 10; d++) {
+      saveResult(rec(`2026-06-${String(d).padStart(2, '0')}`, 12))
+    }
+    saveResult(rec('2026-06-12', 12)) // pulou 06-11
+    const s = getStats('2026-06-12')
+    expect(s.freezes).toBe(1)
+    expect(s.currentStreak).toBe(11) // o escudo cobre o 06-11
+  })
+
+  it('sem escudo (poucos dias), pular quebra o streak', () => {
+    saveResult(rec('2026-06-01', 12))
+    saveResult(rec('2026-06-02', 12))
+    saveResult(rec('2026-06-04', 12)) // pulou 06-03; só 3 dias → 0 escudos
+    const s = getStats('2026-06-04')
+    expect(s.freezes).toBe(0)
+    expect(s.currentStreak).toBe(1)
+  })
+
   it('mantém o melhor streak mesmo após quebrar o atual', () => {
     saveResult(rec('2026-06-01', 12))
     saveResult(rec('2026-06-02', 12))

@@ -115,3 +115,85 @@ body {
     --taut-accent: #4ade80;
   }
 }
+
+/* ── Paletas desbloqueáveis (data-palette no <html>; base :root = Pôr do sol) ── */
+
+:root[data-palette='ocean'] {
+  --taut-surface: #ecfeff;
+  --taut-grid: #ffffff;
+  --taut-grid-line: #cffafe;
+  --taut-wall: #334155;
+  --taut-path: #0d9488;
+  --taut-preview: rgba(13, 148, 136, 0.35);
+  --taut-wp: #fb7185;
+  --taut-wp-ring: #ffffff;
+  --taut-wp-text: #4c0519;
+  --taut-text: #083344;
+  --taut-muted: #0e7490;
+  --taut-accent: #f59e0b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='ocean'] {
+    --taut-surface: #07212b;
+    --taut-grid: #0e2a38;
+    --taut-grid-line: #155e75;
+    --taut-wall: #94a3b8;
+    --taut-path: #2dd4bf;
+    --taut-preview: rgba(45, 212, 191, 0.4);
+    --taut-wp: #fb7185;
+    --taut-wp-ring: #07212b;
+    --taut-wp-text: #07212b;
+    --taut-text: #e0f2fe;
+    --taut-muted: #5eead4;
+    --taut-accent: #fbbf24;
+  }
+}
+
+:root[data-palette='forest'] {
+  --taut-surface: #f7fee7;
+  --taut-grid: #ffffff;
+  --taut-grid-line: #d9f99d;
+  --taut-wall: #44403c;
+  --taut-path: #16a34a;
+  --taut-preview: rgba(22, 163, 74, 0.35);
+  --taut-wp: #f59e0b;
+  --taut-wp-ring: #ffffff;
+  --taut-wp-text: #451a03;
+  --taut-text: #1a2e05;
+  --taut-muted: #4d7c0f;
+  --taut-accent: #0ea5e9;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-palette='forest'] {
+    --taut-surface: #14210a;
+    --taut-grid: #1f2e12;
+    --taut-grid-line: #3f6212;
+    --taut-wall: #a8a29e;
+    --taut-path: #4ade80;
+    --taut-preview: rgba(74, 222, 128, 0.4);
+    --taut-wp: #fbbf24;
+    --taut-wp-ring: #14210a;
+    --taut-wp-text: #14210a;
+    --taut-text: #ecfccb;
+    --taut-muted: #a3e635;
+    --taut-accent: #38bdf8;
+  }
+}
+
+/* Neon noturno: tema de noite — escuro independente do sistema. */
+:root[data-palette='neon'] {
+  --taut-surface: #0b1020;
+  --taut-grid: #131a30;
+  --taut-grid-line: #29324d;
+  --taut-wall: #64748b;
+  --taut-path: #22d3ee;
+  --taut-preview: rgba(34, 211, 238, 0.4);
+  --taut-wp: #f472b6;
+  --taut-wp-ring: #0b1020;
+  --taut-wp-text: #0b1020;
+  --taut-text: #e2e8f0;
+  --taut-muted: #94a3b8;
+  --taut-accent: #a3e635;
+}

@@ -33,6 +33,8 @@ export interface Stats {
   daysPlayed: number
   /** Dias terminados no ideal (`score === par`) — o selo. */
   parCount: number
+  /** Escudos de streak disponíveis (toleram dias pulados). */
+  freezes: number
   /** Histórico completo, em ordem cronológica. */
   history: DayRecord[]
 }
@@ -78,6 +80,51 @@ function persist(data: StoredData): void {
 function dayNumber(date: string): number {
   const [y, m, d] = date.split('-').map(Number)
   return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000)
+}
+
+// --- Streak freeze (escudo) & marcos ---
+
+/** Marcos de streak que disparam selo/celebração. */
+export const STREAK_MILESTONES = [7, 30, 100, 365]
+
+const FREEZE_PER_DAYS = 10 // 1 escudo a cada 10 dias concluídos…
+const MAX_FREEZES = 2 // …até no máximo 2.
+
+/** Escudos disponíveis — cada um tolera 1 dia pulado no streak atual. */
+function availableFreezes(daysCompleted: number): number {
+  return Math.min(MAX_FREEZES, Math.floor(daysCompleted / FREEZE_PER_DAYS))
+}
+
+/**
+ * Streak atual terminando hoje, tolerando até `freezes` dias pulados (1 dia por
+ * escudo). Com 0 escudos é o streak estrito clássico. Conta só dias jogados.
+ */
+function computeCurrentStreak(
+  nums: number[],
+  todayN: number,
+  freezes: number,
+): number {
+  if (nums.length === 0) return 0
+  const played = new Set(nums)
+  const lastN = nums[nums.length - 1]
+  if (lastN > todayN) return 0
+  let budget = freezes - Math.max(0, todayN - lastN - 1) // dias perdidos até hoje
+  if (budget < 0) return 0
+  let streak = 1
+  let cursor = lastN
+  while (true) {
+    if (played.has(cursor - 1)) {
+      streak++
+      cursor -= 1
+    } else if (budget > 0 && played.has(cursor - 2)) {
+      budget-- // gasta 1 escudo pra cobrir o dia pulado
+      streak++
+      cursor -= 2
+    } else {
+      break
+    }
+  }
+  return streak
 }
 
 export function getDay(date: string): DayRecord | undefined {
@@ -129,19 +176,9 @@ export function getStats(today: string): Stats {
     prev = n
   }
 
-  // Streak atual: corrida terminando hoje ou ontem (senão, quebrou).
-  let currentStreak = 0
-  if (nums.length > 0) {
-    const todayN = dayNumber(today)
-    const lastN = nums[nums.length - 1]
-    if (lastN === todayN || lastN === todayN - 1) {
-      currentStreak = 1
-      for (let i = nums.length - 1; i > 0; i--) {
-        if (nums[i] - nums[i - 1] === 1) currentStreak++
-        else break
-      }
-    }
-  }
+  // Streak atual (terminando hoje), tolerando dias pulados com escudos.
+  const freezes = availableFreezes(completed.length)
+  const currentStreak = computeCurrentStreak(nums, dayNumber(today), freezes)
 
   const parCount = completed.filter((r) => r.score === r.par).length
 
@@ -150,6 +187,7 @@ export function getStats(today: string): Stats {
     bestStreak,
     daysPlayed: completed.length,
     parCount,
+    freezes,
     history,
   }
 }
@@ -160,6 +198,7 @@ export function clearAll(): void {
     localStorage.removeItem(STORAGE_KEY)
     localStorage.removeItem(SESSION_KEY)
     localStorage.removeItem(ONBOARDING_KEY)
+    localStorage.removeItem(PALETTE_KEY)
   } catch {
     // ignora
   }
@@ -226,6 +265,26 @@ export function hasSeenOnboarding(): boolean {
 export function markOnboardingSeen(): void {
   try {
     localStorage.setItem(ONBOARDING_KEY, '1')
+  } catch {
+    // ignora
+  }
+}
+
+// --- Paleta de cores selecionada ---
+
+const PALETTE_KEY = 'taut:palette:v1'
+
+export function getPaletteId(): string {
+  try {
+    return localStorage.getItem(PALETTE_KEY) ?? 'sunset'
+  } catch {
+    return 'sunset'
+  }
+}
+
+export function setPaletteId(id: string): void {
+  try {
+    localStorage.setItem(PALETTE_KEY, id)
   } catch {
     // ignora
   }

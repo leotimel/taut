@@ -8,9 +8,10 @@
 import { useEffect, useState } from 'react'
 import type { Point, Puzzle, Score } from '../engine/types'
 import type { PointsBreakdown } from '../lib/points'
-import type { Stats } from '../lib/storage'
+import { STREAK_MILESTONES, type Stats } from '../lib/storage'
 import type { ShareResult } from '../lib/share'
 import { isLandmark, type LevelInfo } from '../lib/level'
+import { PALETTES } from '../lib/palettes'
 import { BoardBackground, BoardWaypoints } from './BoardSVG'
 
 interface ResultModalProps {
@@ -28,6 +29,8 @@ interface ResultModalProps {
   level: LevelInfo
   todayXp: number
   leveledUp: boolean
+  paletteId: string
+  onSelectPalette: (id: string) => void
   onShare?: () => Promise<ShareResult> | void
   onChallenge?: () => Promise<ShareResult> | void
 }
@@ -160,6 +163,8 @@ export function ResultModal({
   level,
   todayXp,
   leveledUp,
+  paletteId,
+  onSelectPalette,
   onShare,
   onChallenge,
 }: ResultModalProps) {
@@ -189,6 +194,10 @@ export function ResultModal({
   if (!open) return null
 
   const atPar = completed && par !== null && geometry.total === par.total
+  const streakMilestone =
+    completed && STREAK_MILESTONES.includes(stats.currentStreak)
+      ? stats.currentStreak
+      : null
 
   const flash = (msg: string) => {
     setToast(msg)
@@ -285,6 +294,22 @@ export function ResultModal({
           <Stat label="no ideal" value={stats.parCount} />
         </div>
 
+        {(streakMilestone !== null || stats.freezes > 0) && (
+          <div className="flex flex-col items-center gap-1 text-xs">
+            {streakMilestone !== null && (
+              <span className="font-bold" style={{ color: 'var(--taut-accent)' }}>
+                🔥 {streakMilestone} dias seguidos!
+              </span>
+            )}
+            {stats.freezes > 0 && (
+              <span style={{ color: 'var(--taut-muted)' }}>
+                🛡️ {stats.freezes} escudo{stats.freezes > 1 ? 's' : ''} — segura{' '}
+                {stats.freezes > 1 ? 'dias pulados' : 'um dia pulado'}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Nível & barra de XP */}
         <div className="w-full">
           <div className="mb-1 flex items-center justify-between text-xs">
@@ -319,6 +344,61 @@ export function ResultModal({
               {isLandmark(level.level) ? ` · ${level.codename}! 🌌` : '!'}
             </p>
           )}
+        </div>
+
+        {/* Temas (paletas desbloqueáveis por nível) */}
+        <div className="w-full">
+          <div
+            className="mb-1 text-xs font-semibold"
+            style={{ color: 'var(--taut-text)' }}
+          >
+            Tema
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {PALETTES.map((p) => {
+              const unlocked = level.level >= p.unlockLevel
+              const selected = p.id === paletteId
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  disabled={!unlocked}
+                  onClick={() => onSelectPalette(p.id)}
+                  className="flex min-h-[40px] items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] transition active:scale-95 disabled:opacity-50"
+                  style={{
+                    background: 'var(--taut-surface)',
+                    border: selected
+                      ? '2px solid var(--taut-accent)'
+                      : '2px solid var(--taut-grid-line)',
+                    color: 'var(--taut-text)',
+                  }}
+                >
+                  <span className="inline-flex">
+                    <span
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: 99,
+                        background: p.swatch.path,
+                        border: '1px solid rgba(0,0,0,0.15)',
+                      }}
+                    />
+                    <span
+                      style={{
+                        width: 12,
+                        height: 12,
+                        borderRadius: 99,
+                        background: p.swatch.wp,
+                        marginLeft: -4,
+                        border: '1px solid rgba(0,0,0,0.15)',
+                      }}
+                    />
+                  </span>
+                  {unlocked ? p.name : `🔒 Nv ${p.unlockLevel}`}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <div className="text-sm" style={{ color: 'var(--taut-muted)' }}>
