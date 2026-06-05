@@ -45,9 +45,9 @@ testado (Vitest, ~95%+ de cobertura no engine).
 ```
 src/
 ├── engine/      # TS puro, sem DOM — a matemática (solver, gerador, validador…)
-├── lib/         # camada de app: seed, storage, points, share, challenge, level, palettes
-├── hooks/       # useTaut (estado, timer, tentativas, XP)
-├── components/  # GameCanvas, ResultModal, Onboarding, BoardSVG
+├── lib/         # app: seed, storage, points, share, shareImage, challenge, level, palettes, achievements, sound
+├── hooks/       # useTaut (estado, timer, tentativas, dicas, XP)
+├── components/  # GameCanvas, ResultModal, Onboarding, Tutorial, BoardSVG
 └── App.tsx
 ```
 
@@ -60,9 +60,14 @@ nunca importa nada de UI.
   de paredes cresce com o tempo).
 - 🏆 **Nível & XP** por performance, com codinomes Cosmos (Ponto → Segmento →
   Polígono → Espiral → Fractal → Infinito) e **paletas desbloqueáveis** por nível.
+- 🏅 **Conquistas** + **histograma** de quão perto do ideal você costuma chegar.
 - 🔥 **Streak** com **escudos** (toleram dias pulados) e marcos (7 / 30 / 100).
-- 📤 **Compartilhar** estilo Wordle (sem revelar o traçado nem o ideal) e **link
-  de desafio** (pontos-alvo no hash da URL — zero servidor).
+- 💡 **Dica** opcional: espia o traçado ideal por uns segundos (a um custo de pontos).
+- 🎓 **Tutorial interativo** na 1ª visita — você pratica num tabuleiro de treino.
+- 🔊 **Som + confete** (juice) ao traçar, concluir e subir de nível — com mudo e
+  respeito a `prefers-reduced-motion`.
+- 📤 **Compartilhar** estilo Wordle (texto) **ou** card de **imagem** PNG — nenhum
+  revela o traçado nem o ideal — e **link de desafio** (pontos-alvo no hash da URL).
 - ♿ Joga com **toque, mouse e teclado** (setas); tema claro/escuro automático;
   vibração sutil no mobile.
 - 📱 **PWA instalável** (funciona offline); deploy automático na Vercel a cada push.

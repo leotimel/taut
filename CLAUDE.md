@@ -10,9 +10,11 @@ pela data.
 - `src/engine/` é **TypeScript puro, sem DOM/React** — o coração e a vitrine.
 - **Direção das dependências:** `components/` e `hooks/` importam de `engine/`;
   o `engine/` **nunca** importa nada de UI.
-- `src/lib/` = camada do app (seed, storage, points, share, challenge, **level**,
-  **palettes**). `hooks/useTaut` orquestra o estado; `components/` tem o
-  `BoardSVG` (grade/paredes/números compartilhados entre canvas e modal).
+- `src/lib/` = camada do app (seed, storage, points, share, **shareImage**,
+  challenge, **level**, **palettes**, **achievements**, **sound**).
+  `hooks/useTaut` orquestra o estado; `components/` tem o `BoardSVG`
+  (grade/paredes/números compartilhados entre canvas e modal) e o `Tutorial`
+  (1ª visita) que reusa o `GameCanvas` em modo `minimal`.
 
 ## Invariantes de jogo (o caminho)
 
@@ -31,9 +33,10 @@ pela data.
   ótimo: dá pra empatar, não pra bater. (No app é rotulado **"Ideal"** e fica
   **oculto até a conclusão** — revelado no fim, como recompensa.)
 - **Pontos do dia** (FORA do engine, em `lib/`): `geometria.total + penalidade de
-  tempo + penalidade de tentativas` (ambas pequenas e com teto; ex.: tempo +1 a
-  cada 30 s máx. +5; tentativas +1 por refazer além do 1º, máx. +3).
-  **Tempo e tentativas nunca afetam o par/ideal.**
+  tempo + penalidade de tentativas + penalidade de dicas` (pequenas e com teto;
+  ex.: tempo +1 a cada 30 s máx. +5; tentativas +1 por refazer além do 1º, máx.
+  +3; cada **dica** que espia o ideal custa +4). **Tempo, tentativas e dicas
+  nunca afetam o par/ideal.**
 
 ## Gerador
 
@@ -69,6 +72,15 @@ pela data.
   derivado do histórico. Codinomes Cosmos nos landmarks (1 Ponto · 5 Segmento ·
   10 Polígono · 25 Espiral · 50 Fractal · 100 Infinito).
 - **Paletas desbloqueáveis** por nível (`lib/palettes.ts` + `data-palette` no CSS).
+- **Conquistas** (`lib/achievements.ts`): selos derivados do histórico (estreia,
+  ideal, streaks, dias jogados, níveis) exibidos no painel, com **histograma** de
+  quão perto do ideal você costuma ficar.
+- **Dica** opcional: espia o traçado ideal por ~2 s a um custo de pontos.
+- **Juice:** sons sintetizados via Web Audio (`lib/sound.ts`, com mudo
+  persistente) e **confete** ao bater o ideal / subir de nível (respeita
+  reduced-motion). Tutorial **interativo** na 1ª visita.
+- **Compartilhar:** texto estilo Wordle **e** um card de imagem PNG
+  (`lib/shareImage.ts`, gerado em canvas, sem revelar traçado/ideal).
 - **Acessível:** joga com toque, mouse e **teclado** (setas/Backspace); foco no
   tabuleiro; toque ≥44px; respeita `prefers-reduced-motion`.
 - **PWA** instalável (offline); **deploy automático** na Vercel
