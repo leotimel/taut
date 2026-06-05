@@ -29,6 +29,8 @@ interface GameCanvasProps {
   onReset: () => void
   onUndo?: () => void
   onHint?: () => void
+  /** Esconde o HUD (placar) e os botões — usado pelo tabuleiro de treino. */
+  minimal?: boolean
 }
 
 const CELL = 100
@@ -65,6 +67,7 @@ export function GameCanvas({
   onReset,
   onUndo,
   onHint,
+  minimal = false,
 }: GameCanvasProps) {
   const { size, waypoints } = puzzle
   const svgRef = useRef<SVGSVGElement>(null)
@@ -193,26 +196,28 @@ export function GameCanvas({
       className="flex w-full flex-col items-center gap-4 select-none"
       style={{ color: 'var(--taut-text)' }}
     >
-      <div className="flex items-center gap-3 text-lg font-semibold">
-        <span>
-          Caminho{' '}
-          <span style={{ color: 'var(--taut-path)' }}>{geometry.total}</span>
-        </span>
-        <span style={{ color: 'var(--taut-muted)' }}>·</span>
-        <span>
-          Ideal{' '}
-          <span style={{ color: 'var(--taut-muted)' }}>
-            {completed ? (par?.total ?? '—') : '🔒'}
+      {!minimal && (
+        <div className="flex items-center gap-3 text-lg font-semibold">
+          <span>
+            Caminho{' '}
+            <span style={{ color: 'var(--taut-path)' }}>{geometry.total}</span>
           </span>
-        </span>
-        <span style={{ color: 'var(--taut-muted)' }}>·</span>
-        <span style={{ color: 'var(--taut-muted)' }}>⏱ {formatTime(elapsedMs)}</span>
-        {atPar ? (
-          <span style={{ color: 'var(--taut-accent)' }}>Ideal! 🎉</span>
-        ) : completed ? (
-          <span style={{ color: 'var(--taut-accent)' }}>Concluído ✓</span>
-        ) : null}
-      </div>
+          <span style={{ color: 'var(--taut-muted)' }}>·</span>
+          <span>
+            Ideal{' '}
+            <span style={{ color: 'var(--taut-muted)' }}>
+              {completed ? (par?.total ?? '—') : '🔒'}
+            </span>
+          </span>
+          <span style={{ color: 'var(--taut-muted)' }}>·</span>
+          <span style={{ color: 'var(--taut-muted)' }}>⏱ {formatTime(elapsedMs)}</span>
+          {atPar ? (
+            <span style={{ color: 'var(--taut-accent)' }}>Ideal! 🎉</span>
+          ) : completed ? (
+            <span style={{ color: 'var(--taut-accent)' }}>Concluído ✓</span>
+          ) : null}
+        </div>
+      )}
 
       <svg
         ref={svgRef}
@@ -302,36 +307,38 @@ export function GameCanvas({
         />
       </svg>
 
-      <div className="flex gap-3">
-        {onHint && (
+      {!minimal && (
+        <div className="flex gap-3">
+          {onHint && (
+            <button
+              type="button"
+              onClick={handleHint}
+              disabled={completed || !bestPath}
+              title="Espia o ideal por 2s (custa pontos)"
+              className="min-h-[44px] rounded-full px-5 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40"
+              style={{
+                background: 'var(--taut-grid)',
+                color: 'var(--taut-text)',
+                border: '2px solid var(--taut-grid-line)',
+              }}
+            >
+              💡 Dica
+            </button>
+          )}
           <button
             type="button"
-            onClick={handleHint}
-            disabled={completed || !bestPath}
-            title="Espia o ideal por 2s (custa pontos)"
-            className="min-h-[44px] rounded-full px-5 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40"
+            onClick={onReset}
+            className="min-h-[44px] rounded-full px-5 py-2 text-sm font-semibold transition active:scale-95"
             style={{
               background: 'var(--taut-grid)',
               color: 'var(--taut-text)',
               border: '2px solid var(--taut-grid-line)',
             }}
           >
-            💡 Dica
+            Recomeçar
           </button>
-        )}
-        <button
-          type="button"
-          onClick={onReset}
-          className="min-h-[44px] rounded-full px-5 py-2 text-sm font-semibold transition active:scale-95"
-          style={{
-            background: 'var(--taut-grid)',
-            color: 'var(--taut-text)',
-            border: '2px solid var(--taut-grid-line)',
-          }}
-        >
-          Recomeçar
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   )
 }

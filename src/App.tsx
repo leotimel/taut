@@ -6,6 +6,7 @@ import { buildShareText, share, type ShareResult } from './lib/share'
 import { renderCard, shareCard } from './lib/shareImage'
 import { buildChallengeUrl, parseChallenge } from './lib/challenge'
 import { Onboarding } from './components/Onboarding'
+import { Tutorial } from './components/Tutorial'
 import {
   hasSeenOnboarding,
   markOnboardingSeen,
@@ -22,7 +23,8 @@ export default function App() {
   const taut = useTaut()
   const [modalOpen, setModalOpen] = useState(false)
   const [challenge] = useState(() => parseChallenge())
-  const [onboardingOpen, setOnboardingOpen] = useState(() => !hasSeenOnboarding())
+  const [onboardingOpen, setOnboardingOpen] = useState(false)
+  const [tutorialOpen, setTutorialOpen] = useState(() => !hasSeenOnboarding())
   const [paletteId, setPaletteIdState] = useState(() => getPaletteId())
   const [soundOn, setSoundOnState] = useState(() => isSoundOn())
 
@@ -40,9 +42,11 @@ export default function App() {
     setSoundOnState(next)
   }
 
-  const closeOnboarding = () => {
+  const closeOnboarding = () => setOnboardingOpen(false)
+
+  const closeTutorial = () => {
     markOnboardingSeen()
-    setOnboardingOpen(false)
+    setTutorialOpen(false)
   }
 
   const selectPalette = (id: string) => {
@@ -204,6 +208,7 @@ export default function App() {
       />
 
       <Onboarding open={onboardingOpen} onClose={closeOnboarding} />
+      <Tutorial open={tutorialOpen} onClose={closeTutorial} />
       <Analytics />
     </main>
   )
