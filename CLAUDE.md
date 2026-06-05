@@ -34,10 +34,9 @@ pela data.
   **oculto até a conclusão** — revelado no fim, como recompensa.)
 - **Esforço do dia** (FORA do engine, em `lib/`; **menor é melhor** — por isso
   "esforço", não "pontos"): `geometria.total + penalidade de tempo + penalidade de
-  tentativas + penalidade de dicas` (pequenas e com teto; ex.: tempo +1 a cada
-  30 s máx. +5; tentativas +1 por refazer além do 1º, máx. +3; cada **dica** que
-  espia o ideal custa +4). **Tempo, tentativas e dicas nunca afetam o par/ideal.**
-  (Internamente o código ainda usa `points`/`dailyPoints`.)
+  tentativas` (pequenas e com teto; ex.: tempo +1 a cada 30 s máx. +5; tentativas
+  +1 por refazer além do 1º, máx. +3). **Tempo e tentativas nunca afetam o
+  par/ideal.** (Internamente o código ainda usa `points`/`dailyPoints`.)
 
 ## Gerador
 
@@ -76,7 +75,6 @@ pela data.
 - **Conquistas** (`lib/achievements.ts`): selos derivados do histórico (estreia,
   ideal, streaks, dias jogados, níveis) exibidos no painel, com **histograma** de
   quão perto do ideal você costuma ficar.
-- **Dica** opcional: espia o traçado ideal por ~2 s a um custo de pontos.
 - **Juice:** sons sintetizados via Web Audio (`lib/sound.ts`, com mudo
   persistente) e **confete** ao bater o ideal / subir de nível (respeita
   reduced-motion). Tutorial **interativo** na 1ª visita.

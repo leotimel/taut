@@ -7,14 +7,8 @@ describe('dailyPoints', () => {
       geometry: 11,
       timePenalty: 0,
       attemptsPenalty: 0,
-      hintsPenalty: 0,
       total: 11,
     })
-  })
-
-  it('cada dica custa +4', () => {
-    expect(dailyPoints(10, 0, 1, 2).hintsPenalty).toBe(8)
-    expect(dailyPoints(10, 0, 1, 2).total).toBe(18) // 10 + 8
   })
 
   it('penaliza +1 a cada 30 s', () => {

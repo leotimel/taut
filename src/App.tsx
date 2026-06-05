@@ -175,11 +175,9 @@ export default function App() {
         par={taut.par}
         geometry={taut.geometry}
         elapsedMs={taut.elapsedMs}
-        bestPath={taut.bestPath}
         onRoute={taut.route}
         onReset={taut.reset}
         onUndo={taut.undo}
-        onHint={taut.spendHint}
       />
 
       <footer className="text-xs" style={{ color: 'var(--taut-muted)' }}>

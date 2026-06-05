@@ -217,8 +217,6 @@ export interface DaySession {
   completedAt: number | null
   /** Tentativas no dia (1 = primeira; cada "Recomeçar" com progresso soma 1). */
   attempts: number
-  /** Dicas usadas no dia (espiar o ideal) — penalizam os pontos. */
-  hints: number
   /** Caminho em andamento — restaurado ao reabrir (não perde o traçado). */
   path: Point[]
 }
@@ -235,7 +233,6 @@ export function loadSession(date: string): DaySession {
           startedAt: s.startedAt ?? null,
           completedAt: s.completedAt ?? null,
           attempts: s.attempts,
-          hints: typeof s.hints === 'number' ? s.hints : 0,
           path: Array.isArray(s.path) ? s.path : [],
         }
       }
@@ -243,7 +240,7 @@ export function loadSession(date: string): DaySession {
   } catch {
     // ignora
   }
-  return { date, startedAt: null, completedAt: null, attempts: 1, hints: 0, path: [] }
+  return { date, startedAt: null, completedAt: null, attempts: 1, path: [] }
 }
 
 export function saveSession(session: DaySession): void {

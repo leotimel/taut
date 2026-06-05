@@ -24,11 +24,9 @@ interface GameCanvasProps {
   par: Score | null
   geometry: Score
   elapsedMs: number
-  bestPath?: Point[] | null
   onRoute: (cell: Point) => void
   onReset: () => void
   onUndo?: () => void
-  onHint?: () => void
   /** Esconde o HUD (placar) e os botões — usado pelo tabuleiro de treino. */
   minimal?: boolean
 }
@@ -62,33 +60,15 @@ export function GameCanvas({
   par,
   geometry,
   elapsedMs,
-  bestPath,
   onRoute,
   onReset,
   onUndo,
-  onHint,
   minimal = false,
 }: GameCanvasProps) {
   const { size, waypoints } = puzzle
   const svgRef = useRef<SVGSVGElement>(null)
   const drawingRef = useRef(false)
   const [pointer, setPointer] = useState<Point | null>(null)
-  const [peeking, setPeeking] = useState(false)
-  const peekTimer = useRef<number | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (peekTimer.current) clearTimeout(peekTimer.current)
-    }
-  }, [])
-
-  const handleHint = useCallback(() => {
-    if (completed || !bestPath || bestPath.length < 2) return
-    onHint?.()
-    setPeeking(true)
-    if (peekTimer.current) clearTimeout(peekTimer.current)
-    peekTimer.current = window.setTimeout(() => setPeeking(false), 2000)
-  }, [completed, bestPath, onHint])
 
   const atPar = completed && par !== null && geometry.total === par.total
 
@@ -283,20 +263,6 @@ export function GameCanvas({
           />
         )}
 
-        {/* Dica: espia o ideal por ~2s */}
-        {peeking && bestPath && bestPath.length >= 2 && (
-          <polyline
-            points={bestPath.map((p) => `${cx(p.x)},${cy(p.y)}`).join(' ')}
-            fill="none"
-            stroke="var(--taut-accent)"
-            strokeWidth={CELL * 0.18}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeDasharray="2 12"
-            opacity={0.75}
-          />
-        )}
-
         <BoardWaypoints
           puzzle={puzzle}
           cell={CELL}
@@ -309,22 +275,6 @@ export function GameCanvas({
 
       {!minimal && (
         <div className="flex gap-3">
-          {onHint && (
-            <button
-              type="button"
-              onClick={handleHint}
-              disabled={completed || !bestPath}
-              title="Espia o ideal por 2s (aumenta seu esforço)"
-              className="min-h-[44px] rounded-full px-5 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40"
-              style={{
-                background: 'var(--taut-grid)',
-                color: 'var(--taut-text)',
-                border: '2px solid var(--taut-grid-line)',
-              }}
-            >
-              💡 Dica
-            </button>
-          )}
           <button
             type="button"
             onClick={onReset}

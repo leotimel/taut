@@ -46,7 +46,7 @@ testado (Vitest, ~95%+ de cobertura no engine).
 src/
 ├── engine/      # TS puro, sem DOM — a matemática (solver, gerador, validador…)
 ├── lib/         # app: seed, storage, points, share, shareImage, challenge, level, palettes, achievements, sound
-├── hooks/       # useTaut (estado, timer, tentativas, dicas, XP)
+├── hooks/       # useTaut (estado, timer, tentativas, XP)
 ├── components/  # GameCanvas, ResultModal, Onboarding, Tutorial, BoardSVG
 └── App.tsx
 ```
@@ -62,7 +62,6 @@ nunca importa nada de UI.
   Polígono → Espiral → Fractal → Infinito) e **paletas desbloqueáveis** por nível.
 - 🏅 **Conquistas** + **histograma** de quão perto do ideal você costuma chegar.
 - 🔥 **Streak** com **escudos** (toleram dias pulados) e marcos (7 / 30 / 100).
-- 💡 **Dica** opcional: espia o traçado ideal por uns segundos (a um custo de pontos).
 - 🎓 **Tutorial interativo** na 1ª visita — você pratica num tabuleiro de treino.
 - 🔊 **Som + confete** (juice) ao traçar, concluir e subir de nível — com mudo e
   respeito a `prefers-reduced-motion`.

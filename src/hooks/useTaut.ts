@@ -2,7 +2,7 @@
  * useTaut — estado de jogo do dia. Carrega o puzzle (determinístico pela data),
  * guarda o caminho atual, conta tentativas, roda o timer (começa na 1ª interação,
  * pausa na conclusão, persiste pra não reiniciar ao reabrir) e calcula geometria
- * vs ideal + pontos do dia em tempo real. Salva o resultado no storage ao
+ * vs ideal + esforço do dia em tempo real. Salva o resultado no storage ao
  * concluir. Importa do engine e da lib; a UI consome este hook.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -48,7 +48,6 @@ export function useTaut(dateOverride?: string) {
   }, [])
 
   const [attempts, setAttempts] = useState(1)
-  const [hints, setHints] = useState(0)
   const [startedAt, setStartedAt] = useState<number | null>(null)
   const [completedAt, setCompletedAt] = useState<number | null>(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -58,7 +57,6 @@ export function useTaut(dateOverride?: string) {
   useEffect(() => {
     const s = loadSession(date)
     setAttempts(s.attempts)
-    setHints(s.hints)
     setStartedAt(s.startedAt)
     setCompletedAt(s.completedAt)
     setPath(s.path.length > 0 ? s.path : [puzzle.waypoints[0]])
@@ -79,8 +77,8 @@ export function useTaut(dateOverride?: string) {
   const elapsedMs = startedAt === null ? 0 : (completedAt ?? nowMs) - startedAt
   const geometry = useMemo(() => score(path, K), [path])
   const points = useMemo<PointsBreakdown>(
-    () => dailyPoints(geometry.total, elapsedMs, attempts, hints),
-    [geometry.total, elapsedMs, attempts, hints],
+    () => dailyPoints(geometry.total, elapsedMs, attempts),
+    [geometry.total, elapsedMs, attempts],
   )
 
   // Ao concluir: congela o timer (1ª vez) e salva/atualiza o resultado.
@@ -94,7 +92,6 @@ export function useTaut(dateOverride?: string) {
         startedAt: startedAt ?? finishedAt,
         completedAt: finishedAt,
         attempts,
-        hints,
         path: pathRef.current,
       })
     }
@@ -106,7 +103,7 @@ export function useTaut(dateOverride?: string) {
       points: points.total,
     })
     setStats(getStats(date))
-  }, [completed, completedAt, date, startedAt, attempts, hints, geometry.total, par, points.total])
+  }, [completed, completedAt, date, startedAt, attempts, geometry.total, par, points.total])
 
   // Nível & XP (derivados do histórico). `leveledUp` compara antes/depois de hoje.
   const totalXp = useMemo(() => totalXpFromHistory(stats.history), [stats])
@@ -131,9 +128,9 @@ export function useTaut(dateOverride?: string) {
       const t = startedAt ?? Date.now()
       if (startedAt === null) setStartedAt(t)
       setPath(next)
-      saveSession({ date, startedAt: t, completedAt, attempts, hints, path: next })
+      saveSession({ date, startedAt: t, completedAt, attempts, path: next })
     },
-    [puzzle, startedAt, completedAt, date, attempts, hints, setPath],
+    [puzzle, startedAt, completedAt, date, attempts, setPath],
   )
 
   /** Desfaz o último segmento. */
@@ -143,8 +140,8 @@ export function useTaut(dateOverride?: string) {
     if (prev.length <= 1) return
     const next = prev.slice(0, -1)
     setPath(next)
-    saveSession({ date, startedAt, completedAt, attempts, hints, path: next })
-  }, [setPath, date, startedAt, completedAt, attempts, hints])
+    saveSession({ date, startedAt, completedAt, attempts, path: next })
+  }, [setPath, date, startedAt, completedAt, attempts])
 
   /** Recomeça do zero no mesmo dia; conta como tentativa se houve progresso. */
   const reset = useCallback(() => {
@@ -153,23 +150,8 @@ export function useTaut(dateOverride?: string) {
     if (drew) setAttempts(nextAttempts)
     const fresh = [puzzle.waypoints[0]]
     setPath(fresh)
-    saveSession({ date, startedAt, completedAt, attempts: nextAttempts, hints, path: fresh })
-  }, [puzzle, startedAt, completedAt, attempts, hints, date, setPath])
-
-  /** Usa uma dica (espiar o ideal) — incrementa o contador (penaliza os pontos). */
-  const spendHint = useCallback(() => {
-    if (completedRef.current) return
-    const next = hints + 1
-    setHints(next)
-    saveSession({
-      date,
-      startedAt,
-      completedAt,
-      attempts,
-      hints: next,
-      path: pathRef.current,
-    })
-  }, [hints, date, startedAt, completedAt, attempts])
+    saveSession({ date, startedAt, completedAt, attempts: nextAttempts, path: fresh })
+  }, [puzzle, startedAt, completedAt, attempts, date, setPath])
 
   return {
     date,
@@ -180,7 +162,6 @@ export function useTaut(dateOverride?: string) {
     geometry,
     completed,
     attempts,
-    hints,
     elapsedMs,
     points,
     stats,
@@ -190,6 +171,5 @@ export function useTaut(dateOverride?: string) {
     route,
     undo,
     reset,
-    spendHint,
   }
 }
