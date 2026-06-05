@@ -1,6 +1,6 @@
 /**
  * ResultModal — painel de resultado e estatísticas. Ao concluir (nunca há
- * derrota), revela o Ideal (oculto durante o jogo), o tempo, os pontos do dia e
+ * derrota), revela o Ideal (oculto durante o jogo), o tempo, o esforço do dia e
  * o "traçado perfeito" do solver sobreposto ao seu. Também abre a qualquer
  * momento pelo ícone de stats — nesse caso, se o dia ainda não foi concluído,
  * NÃO revela o Ideal nem a solução. Importa só tipos do engine/lib.
@@ -328,14 +328,42 @@ export function ResultModal({
               playerPath={playerPath}
               bestPath={bestPath}
             />
-            <p className="text-xs" style={{ color: 'var(--taut-muted)' }}>
-              <span style={{ color: 'var(--taut-path)' }}>━</span> seu traçado ·{' '}
-              <span style={{ color: 'var(--taut-accent)' }}>━</span> o ideal
+            <p
+              className="flex items-center justify-center gap-4 text-xs"
+              style={{ color: 'var(--taut-muted)' }}
+            >
+              <span className="flex items-center gap-1.5">
+                <span
+                  aria-hidden="true"
+                  style={{
+                    display: 'inline-block',
+                    width: 18,
+                    height: 4,
+                    borderRadius: 2,
+                    background: 'var(--taut-path)',
+                    opacity: 0.5,
+                  }}
+                />
+                seu traçado
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span
+                  aria-hidden="true"
+                  style={{
+                    display: 'inline-block',
+                    width: 18,
+                    height: 3,
+                    borderRadius: 2,
+                    background: 'var(--taut-accent)',
+                  }}
+                />
+                o ideal
+              </span>
             </p>
 
             <div className="flex w-full items-center justify-around rounded-2xl py-3" style={{ background: 'var(--taut-surface)' }}>
               <Stat label="tempo" value={fmtTime(elapsedMs)} />
-              <Stat label="pontos do dia" value={points.total} />
+              <Stat label="esforço do dia" value={points.total} />
             </div>
             <p className="text-xs" style={{ color: 'var(--taut-muted)' }}>
               {points.geometry} geometria

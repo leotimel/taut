@@ -157,7 +157,7 @@ export default function App() {
             color: 'var(--taut-text)',
           }}
         >
-          🎯 Supere {challenge.points} pts
+          🎯 Fique abaixo de {challenge.points}
           {taut.completed
             ? taut.points.total < challenge.points
               ? ' · Você superou! 🎉'

@@ -41,7 +41,7 @@ const STEPS = [
   },
   {
     title: 'É isso! 🎉',
-    body: 'Quanto mais curto e com menos curvas, menor o score. No jogo o Ideal fica escondido até você concluir — tente alcançá-lo!',
+    body: 'Quanto mais curto e com menos curvas, menor o esforço. No jogo o Ideal fica escondido até você concluir — tente alcançá-lo!',
   },
 ]
 

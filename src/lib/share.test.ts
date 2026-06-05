@@ -23,7 +23,7 @@ describe('puzzleNumber', () => {
 describe('buildShareText', () => {
   it('cabeçalho no formato certo e SEM revelar o ideal', () => {
     const txt = buildShareText(base)
-    expect(txt).toContain('Taut #4 · 14 pts · ⏱1:23 · 🔥3')
+    expect(txt).toContain('Taut #4 · esforço 14 · ⏱1:23 · 🔥3')
     expect(txt).not.toContain('11') // o valor do ideal nunca aparece
   })
   it('barra cheia quando bate no ideal', () => {

@@ -32,11 +32,12 @@ pela data.
 - **Par** = mínimo da geometria, calculado pelo **solver** (busca exata). É o
   ótimo: dá pra empatar, não pra bater. (No app é rotulado **"Ideal"** e fica
   **oculto até a conclusão** — revelado no fim, como recompensa.)
-- **Pontos do dia** (FORA do engine, em `lib/`): `geometria.total + penalidade de
-  tempo + penalidade de tentativas + penalidade de dicas` (pequenas e com teto;
-  ex.: tempo +1 a cada 30 s máx. +5; tentativas +1 por refazer além do 1º, máx.
-  +3; cada **dica** que espia o ideal custa +4). **Tempo, tentativas e dicas
-  nunca afetam o par/ideal.**
+- **Esforço do dia** (FORA do engine, em `lib/`; **menor é melhor** — por isso
+  "esforço", não "pontos"): `geometria.total + penalidade de tempo + penalidade de
+  tentativas + penalidade de dicas` (pequenas e com teto; ex.: tempo +1 a cada
+  30 s máx. +5; tentativas +1 por refazer além do 1º, máx. +3; cada **dica** que
+  espia o ideal custa +4). **Tempo, tentativas e dicas nunca afetam o par/ideal.**
+  (Internamente o código ainda usa `points`/`dailyPoints`.)
 
 ## Gerador
 
@@ -68,7 +69,7 @@ pela data.
 
 ## Progressão & plataforma
 
-- **Nível & XP** (`lib/level.ts`): XP por performance (pontos do dia vs. ideal),
+- **Nível & XP** (`lib/level.ts`): XP por performance (esforço do dia vs. ideal),
   derivado do histórico. Codinomes Cosmos nos landmarks (1 Ponto · 5 Segmento ·
   10 Polígono · 25 Espiral · 50 Fractal · 100 Infinito).
 - **Paletas desbloqueáveis** por nível (`lib/palettes.ts` + `data-palette` no CSS).

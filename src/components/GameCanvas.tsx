@@ -314,7 +314,7 @@ export function GameCanvas({
               type="button"
               onClick={handleHint}
               disabled={completed || !bestPath}
-              title="Espia o ideal por 2s (custa pontos)"
+              title="Espia o ideal por 2s (aumenta seu esforço)"
               className="min-h-[44px] rounded-full px-5 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-40"
               style={{
                 background: 'var(--taut-grid)',

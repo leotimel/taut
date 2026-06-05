@@ -40,7 +40,7 @@ export interface ShareParams {
 /**
  * Monta a string de compartilhamento. Formato:
  *
- *   Taut #12 · 14 pts · ⏱1:23 · 🔥3
+ *   Taut #12 · esforço 14 · ⏱1:23 · 🔥3
  *   🟦🟦🟦⬜⬜
  *
  * A barra tem 5 blocos: cheia (5 azuis) quando bateu no ideal; perde um bloco a
@@ -52,7 +52,7 @@ export function buildShareText(params: ShareParams): string {
   const filled = Math.max(0, Math.min(5, 5 - gap))
   const bar = '🟦'.repeat(filled) + '⬜'.repeat(5 - filled)
   return (
-    `Taut #${n} · ${params.points} pts · ⏱${formatTime(params.elapsedMs)} · 🔥${params.streak}\n` +
+    `Taut #${n} · esforço ${params.points} · ⏱${formatTime(params.elapsedMs)} · 🔥${params.streak}\n` +
     `${bar}\n${TAUT_URL}`
   )
 }

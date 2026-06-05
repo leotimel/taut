@@ -62,11 +62,11 @@ describe('ResultModal', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('concluído no ideal: revela o ideal e mostra os pontos do dia', () => {
+  it('concluído no ideal: revela o ideal e mostra o esforço do dia', () => {
     render(<ResultModal {...base} completed open />)
     expect(screen.getByText('No ideal! 🎉')).toBeInTheDocument()
     expect(screen.getByText(/Caminho/)).toBeInTheDocument()
-    expect(screen.getByText('pontos do dia')).toBeInTheDocument()
+    expect(screen.getByText('esforço do dia')).toBeInTheDocument()
     expect(screen.getByText('streak 🔥')).toBeInTheDocument()
   })
 

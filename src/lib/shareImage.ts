@@ -81,7 +81,7 @@ export async function renderCard(p: CardParams): Promise<Blob | null> {
     const numW = ctx.measureText(num).width
     ctx.fillStyle = muted
     ctx.font = '600 30px system-ui, sans-serif'
-    ctx.fillText('pts', 40 + numW + 14, 188)
+    ctx.fillText('esforço', 40 + numW + 14, 188)
 
     ctx.fillStyle = text
     ctx.font = '500 28px system-ui, sans-serif'
