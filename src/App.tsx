@@ -4,7 +4,6 @@ import { GameCanvas } from './components/GameCanvas'
 import { ResultModal } from './components/ResultModal'
 import { buildShareText, share, type ShareResult } from './lib/share'
 import { renderCard, shareCard } from './lib/shareImage'
-import { buildChallengeUrl, parseChallenge } from './lib/challenge'
 import { Onboarding } from './components/Onboarding'
 import { Tutorial } from './components/Tutorial'
 import {
@@ -22,7 +21,6 @@ import { Analytics } from '@vercel/analytics/react'
 export default function App() {
   const taut = useTaut()
   const [modalOpen, setModalOpen] = useState(false)
-  const [challenge] = useState(() => parseChallenge())
   const [onboardingOpen, setOnboardingOpen] = useState(false)
   const [tutorialOpen, setTutorialOpen] = useState(() => !hasSeenOnboarding())
   const [paletteId, setPaletteIdState] = useState(() => getPaletteId())
@@ -87,9 +85,6 @@ export default function App() {
     return share(text)
   }
 
-  const handleChallenge = () =>
-    share(buildChallengeUrl({ date: taut.date, points: taut.points.total }))
-
   return (
     <main
       className="flex min-h-svh flex-col items-center justify-center gap-6 px-4 py-8"
@@ -148,26 +143,6 @@ export default function App() {
         </div>
       </header>
 
-      {challenge && challenge.date === taut.date && (
-        <div
-          className="rounded-full px-4 py-2 text-sm font-semibold"
-          style={{
-            background: 'var(--taut-grid)',
-            border: '2px solid var(--taut-accent)',
-            color: 'var(--taut-text)',
-          }}
-        >
-          🎯 Fique abaixo de {challenge.points}
-          {taut.completed
-            ? taut.points.total < challenge.points
-              ? ' · Você superou! 🎉'
-              : taut.points.total === challenge.points
-                ? ' · Empatou!'
-                : ' · Não superou'
-            : ''}
-        </div>
-      )}
-
       <GameCanvas
         puzzle={taut.puzzle}
         path={taut.path}
@@ -202,7 +177,6 @@ export default function App() {
         paletteId={paletteId}
         onSelectPalette={selectPalette}
         onShare={handleShare}
-        onChallenge={handleChallenge}
       />
 
       <Onboarding open={onboardingOpen} onClose={closeOnboarding} />

@@ -177,24 +177,50 @@ export function GameCanvas({
       style={{ color: 'var(--taut-text)' }}
     >
       {!minimal && (
-        <div className="flex items-center gap-3 text-lg font-semibold">
-          <span>
-            Caminho{' '}
-            <span style={{ color: 'var(--taut-path)' }}>{geometry.total}</span>
-          </span>
-          <span style={{ color: 'var(--taut-muted)' }}>·</span>
-          <span>
-            Ideal{' '}
-            <span style={{ color: 'var(--taut-muted)' }}>
-              {completed ? (par?.total ?? '—') : '🔒'}
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="flex items-end justify-center gap-7">
+            <span className="flex flex-col items-center gap-0.5">
+              <span className="text-xs font-medium" style={{ color: 'var(--taut-muted)' }}>
+                Caminho
+              </span>
+              <span
+                className="text-2xl font-black leading-none"
+                style={{ color: 'var(--taut-path)' }}
+              >
+                {geometry.total}
+              </span>
             </span>
-          </span>
-          <span style={{ color: 'var(--taut-muted)' }}>·</span>
-          <span style={{ color: 'var(--taut-muted)' }}>⏱ {formatTime(elapsedMs)}</span>
+            <span className="flex flex-col items-center gap-0.5">
+              <span className="text-xs font-medium" style={{ color: 'var(--taut-muted)' }}>
+                Ideal
+              </span>
+              <span
+                className="text-2xl font-black leading-none"
+                style={{ color: completed ? 'var(--taut-text)' : 'var(--taut-muted)' }}
+              >
+                {completed ? (par?.total ?? '—') : '🔒'}
+              </span>
+            </span>
+            <span className="flex flex-col items-center gap-0.5">
+              <span className="text-xs font-medium" style={{ color: 'var(--taut-muted)' }}>
+                tempo
+              </span>
+              <span
+                className="text-2xl font-black leading-none"
+                style={{ color: 'var(--taut-muted)' }}
+              >
+                {formatTime(elapsedMs)}
+              </span>
+            </span>
+          </div>
           {atPar ? (
-            <span style={{ color: 'var(--taut-accent)' }}>Ideal! 🎉</span>
+            <span className="text-sm font-bold" style={{ color: 'var(--taut-accent)' }}>
+              Ideal! 🎉
+            </span>
           ) : completed ? (
-            <span style={{ color: 'var(--taut-accent)' }}>Concluído ✓</span>
+            <span className="text-sm font-bold" style={{ color: 'var(--taut-accent)' }}>
+              Concluído ✓
+            </span>
           ) : null}
         </div>
       )}

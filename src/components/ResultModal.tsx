@@ -35,7 +35,6 @@ interface ResultModalProps {
   paletteId: string
   onSelectPalette: (id: string) => void
   onShare?: () => Promise<ShareResult> | void
-  onChallenge?: () => Promise<ShareResult> | void
 }
 
 const CELL = 40
@@ -207,7 +206,6 @@ export function ResultModal({
   paletteId,
   onSelectPalette,
   onShare,
-  onChallenge,
 }: ResultModalProps) {
   const countdown = useCountdown(open)
   const [toast, setToast] = useState<string | null>(null)
@@ -270,11 +268,6 @@ export function ResultModal({
     else if (r === 'downloaded') flash('Imagem salva! 📷')
     else if (r === 'unavailable') flash('Não deu pra compartilhar')
   }
-  const handleChallengeClick = async () => {
-    const r = await onChallenge?.()
-    if (r === 'copied') flash('Link copiado! 🔗')
-    else if (r === 'unavailable') flash('Não deu pra copiar')
-  }
 
   return (
     <div
@@ -328,38 +321,6 @@ export function ResultModal({
               playerPath={playerPath}
               bestPath={bestPath}
             />
-            <p
-              className="flex items-center justify-center gap-4 text-xs"
-              style={{ color: 'var(--taut-muted)' }}
-            >
-              <span className="flex items-center gap-1.5">
-                <span
-                  aria-hidden="true"
-                  style={{
-                    display: 'inline-block',
-                    width: 18,
-                    height: 4,
-                    borderRadius: 2,
-                    background: 'var(--taut-path)',
-                    opacity: 0.5,
-                  }}
-                />
-                seu traçado
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span
-                  aria-hidden="true"
-                  style={{
-                    display: 'inline-block',
-                    width: 18,
-                    height: 3,
-                    borderRadius: 2,
-                    background: 'var(--taut-accent)',
-                  }}
-                />
-                o ideal
-              </span>
-            </p>
 
             <div className="flex w-full items-center justify-around rounded-2xl py-3" style={{ background: 'var(--taut-surface)' }}>
               <Stat label="tempo" value={fmtTime(elapsedMs)} />
@@ -551,30 +512,15 @@ export function ResultModal({
                 {toast}
               </p>
             )}
-            <div className="flex w-full gap-3">
-              <button
-                type="button"
-                onClick={handleShareClick}
-                disabled={!onShare}
-                className="min-h-[44px] flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
-                style={{ background: 'var(--taut-path)', color: '#fff' }}
-              >
-                Compartilhar
-              </button>
-              <button
-                type="button"
-                onClick={handleChallengeClick}
-                disabled={!onChallenge}
-                className="min-h-[44px] flex-1 rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
-                style={{
-                  background: 'var(--taut-grid)',
-                  color: 'var(--taut-text)',
-                  border: '2px solid var(--taut-grid-line)',
-                }}
-              >
-                Desafiar amigo
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleShareClick}
+              disabled={!onShare}
+              className="min-h-[44px] w-full rounded-full px-4 py-2 text-sm font-bold transition active:scale-95 disabled:opacity-40"
+              style={{ background: 'var(--taut-path)', color: '#fff' }}
+            >
+              Compartilhar
+            </button>
           </div>
         )}
       </div>
