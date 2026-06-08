@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTaut } from './hooks/useTaut'
 import { GameCanvas } from './components/GameCanvas'
 import { ResultModal } from './components/ResultModal'
-import { buildShareText, share, type ShareResult } from './lib/share'
-import { renderCard, shareCard } from './lib/shareImage'
+import { buildShareText, share } from './lib/share'
 import { Onboarding } from './components/Onboarding'
 import { Tutorial } from './components/Tutorial'
 import {
@@ -57,33 +56,17 @@ export default function App() {
     if (taut.completed) setModalOpen(true)
   }, [taut.completed])
 
-  const handleShare = async (): Promise<ShareResult> => {
-    const ideal = taut.par?.total ?? taut.geometry.total
-    const text = buildShareText({
-      date: taut.date,
-      points: taut.points.total,
-      elapsedMs: taut.elapsedMs,
-      streak: taut.stats.currentStreak,
-      geometry: taut.geometry.total,
-      ideal,
-    })
-    // Tenta o card de imagem; cai pro texto se o canvas não estiver disponível.
-    const blob = await renderCard({
-      date: taut.date,
-      points: taut.points.total,
-      elapsedMs: taut.elapsedMs,
-      streak: taut.stats.currentStreak,
-      level: taut.level.level,
-      codename: taut.level.codename,
-      geometry: taut.geometry.total,
-      ideal,
-    })
-    if (blob) {
-      const r = await shareCard(blob, text)
-      if (r !== 'unavailable') return r
-    }
-    return share(text)
-  }
+  const handleShare = () =>
+    share(
+      buildShareText({
+        date: taut.date,
+        points: taut.points.total,
+        elapsedMs: taut.elapsedMs,
+        streak: taut.stats.currentStreak,
+        geometry: taut.geometry.total,
+        ideal: taut.par?.total ?? taut.geometry.total,
+      }),
+    )
 
   return (
     <main

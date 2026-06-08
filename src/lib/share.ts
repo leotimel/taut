@@ -57,7 +57,7 @@ export function buildShareText(params: ShareParams): string {
   )
 }
 
-export type ShareResult = 'shared' | 'copied' | 'downloaded' | 'unavailable'
+export type ShareResult = 'shared' | 'copied' | 'unavailable'
 
 async function copyToClipboard(text: string): Promise<boolean> {
   try {

@@ -265,7 +265,6 @@ export function ResultModal({
   const handleShareClick = async () => {
     const r = await onShare?.()
     if (r === 'copied') flash('Copiado! 📋')
-    else if (r === 'downloaded') flash('Imagem salva! 📷')
     else if (r === 'unavailable') flash('Não deu pra compartilhar')
   }
 

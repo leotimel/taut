@@ -10,11 +10,12 @@ pela data.
 - `src/engine/` é **TypeScript puro, sem DOM/React** — o coração e a vitrine.
 - **Direção das dependências:** `components/` e `hooks/` importam de `engine/`;
   o `engine/` **nunca** importa nada de UI.
-- `src/lib/` = camada do app (seed, storage, points, share, **shareImage**,
-  challenge, **level**, **palettes**, **achievements**, **sound**).
-  `hooks/useTaut` orquestra o estado; `components/` tem o `BoardSVG`
-  (grade/paredes/números compartilhados entre canvas e modal) e o `Tutorial`
-  (1ª visita) que reusa o `GameCanvas` em modo `minimal`.
+- `src/lib/` = camada do app (seed, storage, points, share, **level**,
+  **palettes**, **achievements**, **sound**; `challenge` está **dormente** —
+  feature de desafio removida da UI). `hooks/useTaut` orquestra o estado;
+  `components/` tem o `BoardSVG` (grade/paredes/números compartilhados entre
+  canvas e modal) e o `Tutorial` (1ª visita) que reusa o `GameCanvas` em modo
+  `minimal`.
 
 ## Invariantes de jogo (o caminho)
 
@@ -63,8 +64,8 @@ pela data.
 - Só o **puzzle de hoje** (sem arquivo/treino); ao terminar, contador pro próximo.
 - Visual **limpo e colorido/lúdico** (não cinza minimalista); respeita o tema
   claro/escuro do sistema.
-- Sem backend/login: histórico em `localStorage`; share estilo Wordle (sem
-  revelar o traçado) + link de desafio (só os pontos-alvo na URL).
+- Sem backend/login: histórico em `localStorage`; share estilo Wordle (texto,
+  sem revelar o traçado nem o valor do ideal).
 
 ## Progressão & plataforma
 
@@ -78,8 +79,9 @@ pela data.
 - **Juice:** sons sintetizados via Web Audio (`lib/sound.ts`, com mudo
   persistente) e **confete** ao bater o ideal / subir de nível (respeita
   reduced-motion). Tutorial **interativo** na 1ª visita.
-- **Compartilhar:** texto estilo Wordle **e** um card de imagem PNG
-  (`lib/shareImage.ts`, gerado em canvas, sem revelar traçado/ideal).
+- **Compartilhar:** só texto estilo Wordle (`lib/share.ts`: esforço/tempo/streak
+  + barra abstrata + link), sem revelar traçado/ideal. (`navigator.share` no
+  mobile; clipboard no desktop.)
 - **Acessível:** joga com toque, mouse e **teclado** (setas/Backspace); foco no
   tabuleiro; toque ≥44px; respeita `prefers-reduced-motion`.
 - **PWA** instalável (offline); **deploy automático** na Vercel
