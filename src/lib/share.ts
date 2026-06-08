@@ -1,7 +1,7 @@
 /**
  * Texto de compartilhamento estilo Wordle — sem imagem, SEM revelar o traçado
  * nem o número do ideal (que fica oculto pra quem ainda não jogou). O "floreio"
- * é uma barra abstrata de 5 blocos indicando o quão perto do ideal você ficou.
+ * é uma nota de 5 estrelas indicando o quão perto do ideal você ficou.
  * Camada de app (pode tocar o DOM no share/clipboard).
  */
 
@@ -40,20 +40,23 @@ export interface ShareParams {
 /**
  * Monta a string de compartilhamento. Formato:
  *
- *   Taut #12 · esforço 14 · ⏱1:23 · 🔥3
- *   🟦🟦🟦⬜⬜
+ *   Taut #12 · esforço 14 · ⏱1:23
+ *   🔥 3
+ *   ⭐⭐⭐⚪⚪
  *
- * A barra tem 5 blocos: cheia (5 azuis) quando bateu no ideal; perde um bloco a
- * cada ponto de geometria acima do ideal. Nunca aparece o valor do ideal.
+ * A barra é uma nota de precisão de 5 estrelas: cheia (5 ⭐) quando bateu no
+ * ideal; perde uma estrela a cada ponto de geometria acima do ideal. Nunca
+ * aparece o valor do ideal.
  */
 export function buildShareText(params: ShareParams): string {
   const n = puzzleNumber(params.date)
   const gap = Math.max(0, params.geometry - params.ideal)
   const filled = Math.max(0, Math.min(5, 5 - gap))
-  const bar = '🟦'.repeat(filled) + '⬜'.repeat(5 - filled)
+  const stars = '⭐'.repeat(filled) + '⚪'.repeat(5 - filled)
   return (
-    `Taut #${n} · esforço ${params.points} · ⏱${formatTime(params.elapsedMs)} · 🔥${params.streak}\n` +
-    `${bar}\n${TAUT_URL}`
+    `Taut #${n} · esforço ${params.points} · ⏱${formatTime(params.elapsedMs)}\n` +
+    `🔥 ${params.streak}\n` +
+    `${stars}\n${TAUT_URL}`
   )
 }
 

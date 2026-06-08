@@ -79,9 +79,9 @@ pela data.
 - **Juice:** sons sintetizados via Web Audio (`lib/sound.ts`, com mudo
   persistente) e **confete** ao bater o ideal / subir de nível (respeita
   reduced-motion). Tutorial **interativo** na 1ª visita.
-- **Compartilhar:** só texto estilo Wordle (`lib/share.ts`: esforço/tempo/streak
-  + barra abstrata + link), sem revelar traçado/ideal. (`navigator.share` no
-  mobile; clipboard no desktop.)
+- **Compartilhar:** só texto estilo Wordle (`lib/share.ts`: esforço/tempo, streak
+  em linha própria, nota de 5 ⭐ de precisão + link), sem revelar traçado/ideal.
+  (`navigator.share` no mobile; clipboard no desktop.)
 - **Acessível:** joga com toque, mouse e **teclado** (setas/Backspace); foco no
   tabuleiro; toque ≥44px; respeita `prefers-reduced-motion`.
 - **PWA** instalável (offline); **deploy automático** na Vercel

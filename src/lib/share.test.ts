@@ -21,19 +21,20 @@ describe('puzzleNumber', () => {
 })
 
 describe('buildShareText', () => {
-  it('cabeçalho no formato certo e SEM revelar o ideal', () => {
+  it('cabeçalho no formato certo, streak em linha própria e SEM revelar o ideal', () => {
     const txt = buildShareText(base)
-    expect(txt).toContain('Taut #4 · esforço 14 · ⏱1:23 · 🔥3')
+    expect(txt).toContain('Taut #4 · esforço 14 · ⏱1:23')
+    expect(txt).toContain('\n🔥 3\n') // streak numa linha só
     expect(txt).not.toContain('11') // o valor do ideal nunca aparece
   })
-  it('barra cheia quando bate no ideal', () => {
-    expect(buildShareText({ ...base, geometry: 11, ideal: 11 })).toContain('🟦🟦🟦🟦🟦')
+  it('5 estrelas quando bate no ideal', () => {
+    expect(buildShareText({ ...base, geometry: 11, ideal: 11 })).toContain('⭐⭐⭐⭐⭐')
   })
-  it('perde um bloco por ponto de geometria acima do ideal', () => {
-    expect(buildShareText({ ...base, geometry: 13, ideal: 11 })).toContain('🟦🟦🟦⬜⬜')
+  it('perde uma estrela por ponto de geometria acima do ideal', () => {
+    expect(buildShareText({ ...base, geometry: 13, ideal: 11 })).toContain('⭐⭐⭐⚪⚪')
   })
-  it('barra vazia quando muito acima do ideal', () => {
-    expect(buildShareText({ ...base, geometry: 20, ideal: 11 })).toContain('⬜⬜⬜⬜⬜')
+  it('sem estrelas quando muito acima do ideal', () => {
+    expect(buildShareText({ ...base, geometry: 20, ideal: 11 })).toContain('⚪⚪⚪⚪⚪')
   })
 })
 

@@ -65,8 +65,8 @@ nunca importa nada de UI.
 - 🎓 **Tutorial interativo** na 1ª visita — você pratica num tabuleiro de treino.
 - 🔊 **Som + confete** (juice) ao traçar, concluir e subir de nível — com mudo e
   respeito a `prefers-reduced-motion`.
-- 📤 **Compartilhar** estilo Wordle: texto com esforço/tempo/streak + barra
-  abstrata e o link — sem revelar o traçado nem o valor do ideal.
+- 📤 **Compartilhar** estilo Wordle: texto com esforço/tempo/streak + **nota de
+  5 estrelas** (precisão) e o link — sem revelar o traçado nem o valor do ideal.
 - ♿ Joga com **toque, mouse e teclado** (setas); tema claro/escuro automático;
   vibração sutil no mobile.
 - 📱 **PWA instalável** (funciona offline); deploy automático na Vercel a cada push.
