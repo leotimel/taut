@@ -62,6 +62,11 @@ pela data.
   exigência. **Escudos** (1 a cada 10 dias, máx. 2) toleram dias pulados; marcos
   comemorados em 7/30/100.
 - Só o **puzzle de hoje** (sem arquivo/treino); ao terminar, contador pro próximo.
+- **Cronômetro = tempo ATIVO** (`useTaut`): corre quando o grid está **jogável**
+  (sem tutorial/onboarding/painel por cima — prop `active`) **e** a aba está
+  visível; **pausa fora de foco** (`visibilitychange`) e na conclusão; persiste
+  (`DaySession.elapsedMs`) pra retomar. Começa quando o grid aparece, não no 1º
+  toque.
 - Visual **limpo e colorido/lúdico** (não cinza minimalista); respeita o tema
   claro/escuro do sistema.
 - Sem backend/login: histórico em `localStorage`; share estilo Wordle (texto,
