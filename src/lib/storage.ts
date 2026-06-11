@@ -211,9 +211,9 @@ const SESSION_KEY = 'taut:session:v1'
 
 export interface DaySession {
   date: string
-  /** Epoch ms da primeira interação (null antes de começar). */
-  startedAt: number | null
-  /** Epoch ms da conclusão (congela o timer; null enquanto joga). */
+  /** Tempo ATIVO acumulado em ms (pausa fora de foco / com overlay). */
+  elapsedMs: number
+  /** Epoch ms da conclusão (marca "já registrado"; null enquanto joga). */
   completedAt: number | null
   /** Tentativas no dia (1 = primeira; cada "Recomeçar" com progresso soma 1). */
   attempts: number
@@ -230,7 +230,7 @@ export function loadSession(date: string): DaySession {
       if (s !== null && s.date === date && typeof s.attempts === 'number') {
         return {
           date: s.date,
-          startedAt: s.startedAt ?? null,
+          elapsedMs: typeof s.elapsedMs === 'number' ? s.elapsedMs : 0,
           completedAt: s.completedAt ?? null,
           attempts: s.attempts,
           path: Array.isArray(s.path) ? s.path : [],
@@ -240,7 +240,7 @@ export function loadSession(date: string): DaySession {
   } catch {
     // ignora
   }
-  return { date, startedAt: null, completedAt: null, attempts: 1, path: [] }
+  return { date, elapsedMs: 0, completedAt: null, attempts: 1, path: [] }
 }
 
 export function saveSession(session: DaySession): void {

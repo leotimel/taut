@@ -1,9 +1,10 @@
 /**
  * useTaut — estado de jogo do dia. Carrega o puzzle (determinístico pela data),
- * guarda o caminho atual, conta tentativas, roda o timer (começa na 1ª interação,
- * pausa na conclusão, persiste pra não reiniciar ao reabrir) e calcula geometria
- * vs ideal + esforço do dia em tempo real. Salva o resultado no storage ao
- * concluir. Importa do engine e da lib; a UI consome este hook.
+ * guarda o caminho atual, conta tentativas e roda o cronômetro de TEMPO ATIVO:
+ * começa quando o grid está jogável (`active` — sem overlay por cima) e a aba
+ * está visível; **pausa fora de foco**; congela na conclusão; persiste pra
+ * retomar. Calcula geometria vs ideal + esforço do dia em tempo real e salva o
+ * resultado ao concluir. Importa do engine e da lib; a UI consome este hook.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Point } from '../engine/types'
@@ -33,7 +34,11 @@ export function todayISO(): string {
   return `${y}-${m}-${day}`
 }
 
-export function useTaut(dateOverride?: string) {
+/**
+ * @param active O grid está jogável (sem overlay de tutorial/onboarding/painel
+ *   por cima). O cronômetro só corre quando `active` **e** a aba está visível.
+ */
+export function useTaut(dateOverride?: string, active = true) {
   const date = useMemo(() => dateOverride ?? todayISO(), [dateOverride])
   const puzzle = useMemo(() => generateDaily(date), [date])
   const solution = useMemo(() => solve(puzzle, K), [puzzle])
@@ -48,17 +53,29 @@ export function useTaut(dateOverride?: string) {
   }, [])
 
   const [attempts, setAttempts] = useState(1)
-  const [startedAt, setStartedAt] = useState<number | null>(null)
   const [completedAt, setCompletedAt] = useState<number | null>(null)
-  const [nowMs, setNowMs] = useState(() => Date.now())
+
+  // Cronômetro: tempo ATIVO acumulado (ms). Sobe por deltas enquanto corre e
+  // "banca" o trecho parcial ao pausar. `elapsedRef` espelha pra persistência.
+  const [elapsedMs, setElapsedMs] = useState(0)
+  const elapsedRef = useRef(0)
+  useEffect(() => {
+    elapsedRef.current = elapsedMs
+  }, [elapsedMs])
+
+  const [visible, setVisible] = useState(
+    () => typeof document === 'undefined' || document.visibilityState === 'visible',
+  )
+
   const [stats, setStats] = useState<Stats>(() => getStats(date))
 
   // (Re)carrega a sessão e zera o caminho quando o dia muda.
   useEffect(() => {
     const s = loadSession(date)
     setAttempts(s.attempts)
-    setStartedAt(s.startedAt)
     setCompletedAt(s.completedAt)
+    elapsedRef.current = s.elapsedMs
+    setElapsedMs(s.elapsedMs)
     setPath(s.path.length > 0 ? s.path : [puzzle.waypoints[0]])
     setStats(getStats(date))
   }, [date, puzzle, setPath])
@@ -67,21 +84,51 @@ export function useTaut(dateOverride?: string) {
   const completedRef = useRef(completed)
   completedRef.current = completed
 
-  // Tique do timer só enquanto está rodando.
+  // Visibilidade da aba: pausa o cronômetro fora de foco e persiste ao sair.
   useEffect(() => {
-    if (startedAt === null || completedAt !== null) return
-    const id = setInterval(() => setNowMs(Date.now()), 250)
-    return () => clearInterval(id)
-  }, [startedAt, completedAt])
+    if (typeof document === 'undefined') return
+    const onVis = () => {
+      const vis = document.visibilityState === 'visible'
+      setVisible(vis)
+      if (!vis) {
+        saveSession({
+          date,
+          elapsedMs: elapsedRef.current,
+          completedAt,
+          attempts,
+          path: pathRef.current,
+        })
+      }
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [date, completedAt, attempts])
 
-  const elapsedMs = startedAt === null ? 0 : (completedAt ?? nowMs) - startedAt
+  // Tique do cronômetro: corre só com grid jogável, aba visível e não concluído.
+  useEffect(() => {
+    if (!active || !visible || completed) return
+    let last = Date.now()
+    const id = setInterval(() => {
+      const now = Date.now()
+      const delta = now - last
+      last = now
+      setElapsedMs((e) => e + delta)
+    }, 250)
+    return () => {
+      clearInterval(id)
+      const rest = Date.now() - last
+      if (rest > 0) setElapsedMs((e) => e + rest)
+    }
+  }, [active, visible, completed])
+
   const geometry = useMemo(() => score(path, K), [path])
   const points = useMemo<PointsBreakdown>(
     () => dailyPoints(geometry.total, elapsedMs, attempts),
     [geometry.total, elapsedMs, attempts],
   )
 
-  // Ao concluir: congela o timer (1ª vez) e salva/atualiza o resultado.
+  // Ao concluir: salva/atualiza o resultado (uma vez). O cronômetro congela
+  // sozinho (deixa de correr quando `completed`).
   useEffect(() => {
     if (!completed) return
     if (completedAt === null) {
@@ -89,7 +136,7 @@ export function useTaut(dateOverride?: string) {
       setCompletedAt(finishedAt)
       saveSession({
         date,
-        startedAt: startedAt ?? finishedAt,
+        elapsedMs: elapsedRef.current,
         completedAt: finishedAt,
         attempts,
         path: pathRef.current,
@@ -103,7 +150,7 @@ export function useTaut(dateOverride?: string) {
       points: points.total,
     })
     setStats(getStats(date))
-  }, [completed, completedAt, date, startedAt, attempts, geometry.total, par, points.total])
+  }, [completed, completedAt, date, attempts, geometry.total, par, points.total])
 
   // Nível & XP (derivados do histórico). `leveledUp` compara antes/depois de hoje.
   const totalXp = useMemo(() => totalXpFromHistory(stats.history), [stats])
@@ -118,19 +165,17 @@ export function useTaut(dateOverride?: string) {
     [completed, totalXp, todayXp, level.level],
   )
 
-  /** Aplica o arrasto até `cell` (estende/retrocede); inicia o timer na 1ª vez. */
+  /** Aplica o arrasto até `cell` (estende/retrocede). */
   const route = useCallback(
     (cell: Point) => {
       if (completedRef.current) return
       const prev = pathRef.current
       const next = routeTo(prev, cell, puzzle)
       if (next === prev) return
-      const t = startedAt ?? Date.now()
-      if (startedAt === null) setStartedAt(t)
       setPath(next)
-      saveSession({ date, startedAt: t, completedAt, attempts, path: next })
+      saveSession({ date, elapsedMs: elapsedRef.current, completedAt, attempts, path: next })
     },
-    [puzzle, startedAt, completedAt, date, attempts, setPath],
+    [puzzle, completedAt, date, attempts, setPath],
   )
 
   /** Desfaz o último segmento. */
@@ -140,8 +185,8 @@ export function useTaut(dateOverride?: string) {
     if (prev.length <= 1) return
     const next = prev.slice(0, -1)
     setPath(next)
-    saveSession({ date, startedAt, completedAt, attempts, path: next })
-  }, [setPath, date, startedAt, completedAt, attempts])
+    saveSession({ date, elapsedMs: elapsedRef.current, completedAt, attempts, path: next })
+  }, [setPath, date, completedAt, attempts])
 
   /** Recomeça do zero no mesmo dia; conta como tentativa se houve progresso. */
   const reset = useCallback(() => {
@@ -150,8 +195,14 @@ export function useTaut(dateOverride?: string) {
     if (drew) setAttempts(nextAttempts)
     const fresh = [puzzle.waypoints[0]]
     setPath(fresh)
-    saveSession({ date, startedAt, completedAt, attempts: nextAttempts, path: fresh })
-  }, [puzzle, startedAt, completedAt, attempts, date, setPath])
+    saveSession({
+      date,
+      elapsedMs: elapsedRef.current,
+      completedAt,
+      attempts: nextAttempts,
+      path: fresh,
+    })
+  }, [puzzle, completedAt, attempts, date, setPath])
 
   return {
     date,

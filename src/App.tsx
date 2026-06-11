@@ -18,12 +18,16 @@ import { setMuted } from './lib/sound'
 import { Analytics } from '@vercel/analytics/react'
 
 export default function App() {
-  const taut = useTaut()
   const [modalOpen, setModalOpen] = useState(false)
   const [onboardingOpen, setOnboardingOpen] = useState(false)
   const [tutorialOpen, setTutorialOpen] = useState(() => !hasSeenOnboarding())
   const [paletteId, setPaletteIdState] = useState(() => getPaletteId())
   const [soundOn, setSoundOnState] = useState(() => isSoundOn())
+
+  // O cronômetro só corre com o grid jogável (sem tutorial/onboarding/painel
+  // por cima). A pausa fora de foco (aba) é tratada dentro do useTaut.
+  const gridActive = !modalOpen && !onboardingOpen && !tutorialOpen
+  const taut = useTaut(undefined, gridActive)
 
   useEffect(() => {
     applyPalette(paletteId)
