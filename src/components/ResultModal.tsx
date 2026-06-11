@@ -89,7 +89,9 @@ function BoardReveal({
   return (
     <svg
       viewBox={`0 0 ${span} ${span}`}
-      className="h-auto w-full max-w-[260px] rounded-2xl"
+      width={span}
+      height={span}
+      className="aspect-square w-full max-w-[260px] rounded-2xl"
       style={{ background: 'var(--taut-surface)' }}
     >
       <BoardBackground
