@@ -330,7 +330,7 @@ export function ResultModal({
             <p className="text-xs" style={{ color: 'var(--taut-muted)' }}>
               {points.geometry} geometria
               {points.timePenalty > 0 ? ` + ${points.timePenalty} tempo` : ''}
-              {points.attemptsPenalty > 0 ? ` + ${points.attemptsPenalty} tentativas` : ''}
+              {points.attemptsPenalty > 0 ? ` + ${points.attemptsPenalty} por refazer` : ''}
             </p>
           </>
         ) : (

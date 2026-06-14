@@ -35,9 +35,9 @@ pela data.
   **oculto até a conclusão** — revelado no fim, como recompensa.)
 - **Esforço do dia** (FORA do engine, em `lib/`; **menor é melhor** — por isso
   "esforço", não "pontos"): `geometria.total + penalidade de tempo + penalidade de
-  tentativas` (pequenas e com teto; ex.: tempo +1 a cada 30 s máx. +5; tentativas
-  +1 por refazer além do 1º, máx. +3). **Tempo e tentativas nunca afetam o
-  par/ideal.** (Internamente o código ainda usa `points`/`dailyPoints`.)
+  tentativas` (tempo +1 a cada 30 s, **teto +5**; cada **refazer** além do 1º vale
+  **+5, sem teto**). **Tempo e tentativas nunca afetam o par/ideal.** (Internamente
+  o código ainda usa `points`/`dailyPoints`.)
 
 ## Gerador
 
@@ -84,9 +84,10 @@ pela data.
 - **Juice:** sons sintetizados via Web Audio (`lib/sound.ts`, com mudo
   persistente) e **confete** ao bater o ideal / subir de nível (respeita
   reduced-motion). Tutorial **interativo** na 1ª visita.
-- **Compartilhar:** só texto estilo Wordle (`lib/share.ts`: esforço/tempo, streak
-  em linha própria, nota de 5 ⭐ de precisão + link), sem revelar traçado/ideal.
-  (`navigator.share` no mobile; clipboard no desktop.)
+- **Compartilhar:** só texto estilo Wordle (`lib/share.ts`: esforço/tempo,
+  tentativas — só se houve refeita —, streak em linha própria, nota de 5 ⭐ de
+  precisão + link), sem revelar traçado/ideal. (`navigator.share` no mobile;
+  clipboard no desktop.)
 - **Acessível:** joga com toque, mouse e **teclado** (setas/Backspace); foco no
   tabuleiro; toque ≥44px; respeita `prefers-reduced-motion`.
 - **PWA** instalável (offline); **deploy automático** na Vercel

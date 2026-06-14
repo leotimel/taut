@@ -28,10 +28,12 @@ function formatTime(ms: number): string {
 
 export interface ShareParams {
   date: string
-  /** Pontos do dia (geometria + tempo + tentativas). */
+  /** Esforço do dia (geometria + tempo + tentativas). */
   points: number
   elapsedMs: number
   streak: number
+  /** Tentativas no dia (1 = de primeira). A linha só aparece se > 1. */
+  attempts: number
   /** Geometria do jogador e ideal — usados só pro floreio; o ideal NÃO é impresso. */
   geometry: number
   ideal: number
@@ -41,10 +43,12 @@ export interface ShareParams {
  * Monta a string de compartilhamento. Formato:
  *
  *   Taut #12 · esforço 14 · ⏱1:23
+ *   🔁 3 tentativas
  *   🔥 3
  *   ⭐⭐⭐⚪⚪
  *
- * A barra é uma nota de precisão de 5 estrelas: cheia (5 ⭐) quando bateu no
+ * A linha de tentativas só aparece quando houve refeita (tentativas > 1). A
+ * barra é uma nota de precisão de 5 estrelas: cheia (5 ⭐) quando bateu no
  * ideal; perde uma estrela a cada ponto de geometria acima do ideal. Nunca
  * aparece o valor do ideal.
  */
@@ -53,8 +57,11 @@ export function buildShareText(params: ShareParams): string {
   const gap = Math.max(0, params.geometry - params.ideal)
   const filled = Math.max(0, Math.min(5, 5 - gap))
   const stars = '⭐'.repeat(filled) + '⚪'.repeat(5 - filled)
+  const attemptsLine =
+    params.attempts > 1 ? `🔁 ${params.attempts} tentativas\n` : ''
   return (
     `Taut #${n} · esforço ${params.points} · ⏱${formatTime(params.elapsedMs)}\n` +
+    attemptsLine +
     `🔥 ${params.streak}\n` +
     `${stars}\n${TAUT_URL}`
   )

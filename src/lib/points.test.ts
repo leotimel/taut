@@ -21,18 +21,18 @@ describe('dailyPoints', () => {
     expect(dailyPoints(10, 10 * 60_000, 1).timePenalty).toBe(5)
   })
 
-  it('a 1ª tentativa não penaliza; cada refazer soma +1', () => {
+  it('a 1ª tentativa não penaliza; cada refazer soma +5', () => {
     expect(dailyPoints(10, 0, 1).attemptsPenalty).toBe(0)
-    expect(dailyPoints(10, 0, 2).attemptsPenalty).toBe(1)
-    expect(dailyPoints(10, 0, 4).attemptsPenalty).toBe(3)
+    expect(dailyPoints(10, 0, 2).attemptsPenalty).toBe(5)
+    expect(dailyPoints(10, 0, 4).attemptsPenalty).toBe(15)
   })
 
-  it('tentativas têm teto de +3', () => {
-    expect(dailyPoints(10, 0, 99).attemptsPenalty).toBe(3)
+  it('tentativas não têm teto', () => {
+    expect(dailyPoints(10, 0, 11).attemptsPenalty).toBe(50)
   })
 
   it('soma tudo no total', () => {
-    // geometria 14 + tempo (60s→+2) + tentativas (3ª→+2) = 18
-    expect(dailyPoints(14, 60_000, 3).total).toBe(18)
+    // geometria 14 + tempo (60s→+2) + tentativas (3ª = 2 refeitas → +10) = 26
+    expect(dailyPoints(14, 60_000, 3).total).toBe(26)
   })
 })

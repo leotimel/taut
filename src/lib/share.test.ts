@@ -7,6 +7,7 @@ const base = {
   points: 14,
   elapsedMs: 83_000, // 1:23
   streak: 3,
+  attempts: 1,
   geometry: 13,
   ideal: 11,
 }
@@ -35,6 +36,12 @@ describe('buildShareText', () => {
   })
   it('sem estrelas quando muito acima do ideal', () => {
     expect(buildShareText({ ...base, geometry: 20, ideal: 11 })).toContain('⚪⚪⚪⚪⚪')
+  })
+  it('linha de tentativas só quando houve refeita, acima do streak', () => {
+    expect(buildShareText(base)).not.toContain('tentativa') // 1 tentativa → sem linha
+    const txt = buildShareText({ ...base, attempts: 3 })
+    expect(txt).toContain('🔁 3 tentativas')
+    expect(txt.indexOf('🔁 3 tentativas')).toBeLessThan(txt.indexOf('🔥'))
   })
 })
 

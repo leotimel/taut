@@ -67,6 +67,7 @@ export default function App() {
         points: taut.points.total,
         elapsedMs: taut.elapsedMs,
         streak: taut.stats.currentStreak,
+        attempts: taut.attempts,
         geometry: taut.geometry.total,
         ideal: taut.par?.total ?? taut.geometry.total,
       }),

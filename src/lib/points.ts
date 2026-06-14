@@ -10,8 +10,8 @@
 export const TIME_PENALTY_STEP_MS = 30_000
 /** …até no máximo +5. */
 export const TIME_PENALTY_MAX = 5
-/** Cada refazer além do 1º vale +1, até no máximo +3. */
-export const ATTEMPTS_PENALTY_MAX = 3
+/** Cada refazer além do 1º vale +5 (sem teto). */
+export const ATTEMPTS_PENALTY_STEP = 5
 
 export interface PointsBreakdown {
   geometry: number
@@ -23,7 +23,7 @@ export interface PointsBreakdown {
 /**
  * `dailyPoints(geometria, tempoMs, tentativas)` → detalhamento do esforço do dia.
  * - tempo: `min(5, ⌊tempoMs / 30000⌋)`
- * - tentativas: `min(3, max(0, tentativas − 1))` (a 1ª tentativa não penaliza)
+ * - tentativas: `5 · max(0, tentativas − 1)` (a 1ª não penaliza; **sem teto**)
  */
 export function dailyPoints(
   geometry: number,
@@ -34,10 +34,7 @@ export function dailyPoints(
     TIME_PENALTY_MAX,
     Math.floor(Math.max(0, elapsedMs) / TIME_PENALTY_STEP_MS),
   )
-  const attemptsPenalty = Math.min(
-    ATTEMPTS_PENALTY_MAX,
-    Math.max(0, attempts - 1),
-  )
+  const attemptsPenalty = Math.max(0, attempts - 1) * ATTEMPTS_PENALTY_STEP
   return {
     geometry,
     timePenalty,
