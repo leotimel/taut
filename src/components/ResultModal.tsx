@@ -212,6 +212,7 @@ export function ResultModal({
   const countdown = useCountdown(open)
   const [toast, setToast] = useState<string | null>(null)
   const [barW, setBarW] = useState('0%')
+  const [selectedAch, setSelectedAch] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -418,23 +419,49 @@ export function ResultModal({
           <div className="flex flex-wrap justify-center gap-2">
             {ACHIEVEMENTS.map((a) => {
               const got = isUnlocked(a, achCtx)
+              const sel = selectedAch === a.id
               return (
-                <div
+                <button
                   key={a.id}
+                  type="button"
+                  onClick={() => setSelectedAch((prev) => (prev === a.id ? null : a.id))}
                   title={`${a.name} — ${a.desc}`}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-lg"
+                  aria-label={`${a.name}: ${a.desc} (${got ? 'desbloqueada' : 'bloqueada'})`}
+                  aria-pressed={sel}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-lg transition active:scale-95"
                   style={{
                     background: 'var(--taut-surface)',
-                    border: '2px solid var(--taut-grid-line)',
-                    opacity: got ? 1 : 0.35,
-                    filter: got ? 'none' : 'grayscale(1)',
+                    border: `2px solid ${sel ? 'var(--taut-path)' : 'var(--taut-grid-line)'}`,
                   }}
                 >
-                  {a.icon}
-                </div>
+                  <span style={{ opacity: got ? 1 : 0.35, filter: got ? 'none' : 'grayscale(1)' }}>
+                    {a.icon}
+                  </span>
+                </button>
               )
             })}
           </div>
+          {(() => {
+            const sel = ACHIEVEMENTS.find((a) => a.id === selectedAch)
+            if (!sel) {
+              return (
+                <p className="mt-1.5 text-center text-xs" style={{ color: 'var(--taut-muted)' }}>
+                  Toque numa conquista pra ver o que é.
+                </p>
+              )
+            }
+            const got = isUnlocked(sel, achCtx)
+            return (
+              <p className="mt-1.5 text-center text-xs" style={{ color: 'var(--taut-text)' }}>
+                <span className="font-bold">
+                  {sel.icon} {sel.name}
+                </span>
+                <span style={{ color: 'var(--taut-muted)' }}>
+                  {' '}— {sel.desc} {got ? '✓' : '🔒'}
+                </span>
+              </p>
+            )
+          })()}
         </div>
 
         {/* Temas (paletas desbloqueáveis por nível) */}

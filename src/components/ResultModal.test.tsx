@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { render, screen, cleanup } from '@testing-library/react'
+import { render, screen, cleanup, fireEvent } from '@testing-library/react'
 import { ResultModal } from './ResultModal'
 
 // canvas-confetti precisa de canvas/matchMedia reais (ausentes no jsdom).
@@ -73,5 +73,14 @@ describe('ResultModal', () => {
     render(<ResultModal {...base} completed={false} open />)
     expect(screen.getByText('Estatísticas')).toBeInTheDocument()
     expect(screen.queryByText(/Caminho/)).not.toBeInTheDocument()
+  })
+
+  it('tocar numa conquista revela nome e descrição', () => {
+    render(<ResultModal {...base} completed open />)
+    // antes do toque: dica, e a descrição não está visível no corpo
+    expect(screen.getByText(/Toque numa conquista/)).toBeInTheDocument()
+    expect(screen.queryByText(/Conclua seu 1º puzzle/)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Estreia/ }))
+    expect(screen.getByText(/Conclua seu 1º puzzle/)).toBeInTheDocument()
   })
 })
