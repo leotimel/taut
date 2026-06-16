@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import type { Stats } from './storage'
-import { ACHIEVEMENTS, unlockedCount, isUnlocked } from './achievements'
+import type { DayRecord, Stats } from './storage'
+import { ACHIEVEMENTS, unlockedCount, isUnlocked, maxIdealStreak } from './achievements'
 
 const stats = (over: Partial<Stats>): Stats => ({
   currentStreak: 0,
@@ -10,6 +10,13 @@ const stats = (over: Partial<Stats>): Stats => ({
   freezes: 0,
   history: [],
   ...over,
+})
+
+const rec = (date: string, score: number, par: number): DayRecord => ({
+  date,
+  score,
+  par,
+  completed: true,
 })
 
 describe('achievements', () => {
@@ -33,7 +40,27 @@ describe('achievements', () => {
       stats: stats({ daysPlayed: 30, parCount: 10, bestStreak: 7 }),
       level: 10,
     }
-    // debut, ideal1, ideal10, streak7, days30, level5, level10 = 7
-    expect(unlockedCount(ctx)).toBe(7)
+    // debut, ideal1, ideal3, ideal10, streak7, days30, level5, level10 = 8
+    expect(unlockedCount(ctx)).toBe(8)
+  })
+
+  it('maxIdealStreak conta dias consecutivos no ideal', () => {
+    const history = [
+      rec('2026-06-01', 5, 5), // ideal
+      rec('2026-06-02', 6, 5), // não-ideal → quebra
+      rec('2026-06-03', 5, 5), // ideal
+      rec('2026-06-04', 5, 5), // ideal
+      rec('2026-06-05', 5, 5), // ideal → run de 3
+      rec('2026-06-07', 5, 5), // ideal, mas pulou o dia 6 → reinicia
+    ]
+    expect(maxIdealStreak(history)).toBe(3)
+    expect(maxIdealStreak([])).toBe(0)
+  })
+
+  it('Ideais seguidos desbloqueia com 3 ideais consecutivos', () => {
+    const consec3 = ACHIEVEMENTS.find((a) => a.id === 'consec3')!
+    const history = [rec('2026-06-01', 5, 5), rec('2026-06-02', 5, 5), rec('2026-06-03', 5, 5)]
+    expect(isUnlocked(consec3, { stats: stats({ history }), level: 1 })).toBe(true)
+    expect(isUnlocked(consec3, { stats: stats({ history: history.slice(0, 2) }), level: 1 })).toBe(false)
   })
 })

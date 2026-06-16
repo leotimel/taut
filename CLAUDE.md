@@ -79,8 +79,9 @@ pela data.
   10 Polígono · 25 Espiral · 50 Fractal · 100 Infinito).
 - **Paletas desbloqueáveis** por nível (`lib/palettes.ts` + `data-palette` no CSS).
 - **Conquistas** (`lib/achievements.ts`): selos derivados do histórico (estreia,
-  ideal, streaks, dias jogados, níveis) exibidos no painel, com **histograma** de
-  quão perto do ideal você costuma ficar.
+  ideal batido, **ideais seguidos**, streaks, dias jogados, níveis); tocar revela
+  nome+descrição. Painel tem ainda **histograma** de quão perto do ideal você
+  costuma ficar.
 - **Juice:** sons sintetizados via Web Audio (`lib/sound.ts`, com mudo
   persistente) e **confete** ao bater o ideal / subir de nível (respeita
   reduced-motion). Tutorial **interativo** na 1ª visita.
