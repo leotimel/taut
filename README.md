@@ -46,7 +46,7 @@ testado (Vitest, ~95%+ de cobertura no engine).
 src/
 ├── engine/      # TS puro, sem DOM — a matemática (solver, gerador, validador…)
 ├── lib/         # app: seed, storage, points, share, level, palettes, achievements, sound
-├── hooks/       # useTaut (estado, timer, tentativas, XP)
+├── hooks/       # useTaut (estado, cronômetro de tempo ativo, tentativas, XP)
 ├── components/  # GameCanvas, ResultModal, Onboarding, Tutorial, BoardSVG
 └── App.tsx
 ```
@@ -60,8 +60,11 @@ nunca importa nada de UI.
   de paredes cresce com o tempo).
 - 🏆 **Nível & XP** por performance, com codinomes Cosmos (Ponto → Segmento →
   Polígono → Espiral → Fractal → Infinito) e **paletas desbloqueáveis** por nível.
-- 🏅 **Conquistas** + **histograma** de quão perto do ideal você costuma chegar.
-- 🔥 **Streak** com **escudos** (toleram dias pulados) e marcos (7 / 30 / 100).
+- 🏅 **20 conquistas** (toque revela cada uma) + **histograma** de quão perto do
+  ideal você costuma chegar.
+- 🔥 **Streak** com **escudos** (toleram dias pulados) e marcos comemorados.
+- ⏱ **Cronômetro de tempo ativo:** começa quando o grid aparece e **pausa** quando
+  a aba sai de foco (conta só o tempo jogando).
 - 🎓 **Tutorial interativo** na 1ª visita — você pratica num tabuleiro de treino.
 - 🔊 **Som + confete** (juice) ao traçar, concluir e subir de nível — com mudo e
   respeito a `prefers-reduced-motion`.
