@@ -34,18 +34,22 @@ export interface GeneratorConfig {
  *   7×7 (um único solve chega a ~380 ms e a geração a dezenas de segundos).
  * - `waypointCount` em **4**: mais waypoints encurtam as pernas e ESMAGAM o gap
  *   (com 5, o gap trava em ~2), matando a otimização que é o coração do jogo.
- * - `wallCount`/`threshold` são as alavancas de dificuldade (a rampa sobe estes,
- *   ver `rampForDay`). No 6×6 com 4 waypoints o teto de gap fica ~6–10, então
- *   `threshold` acima de ~8 começa a cair em fallback.
+ * - **Medição (jul/2026):** no 6×6/4wp a densidade de paredes NÃO aumenta o gap —
+ *   só eleva a taxa de fallback (mais paredes → mais tabuleiros de gap baixo).
+ *   `wallCount 9` mantém ~15% de fallback (igual a 8) com teto de gap um pouco
+ *   maior; `wallCount ≥ 10` já sobe pra ~30%. Por isso a dificuldade REAL vem dos
+ *   elementos de tabuleiro (célula proibida etc.), não de afinar paredes.
+ * - `minParLength 10` garante caminhos mais longos/menos triviais sem custo de
+ *   fallback (mede-se igual a 8). `threshold` fica em 6 (acima disso → fallback).
  * - `k` (peso das curvas) deve casar com o resto do app (scorer/pontos).
  */
 export const DEFAULT_CONFIG: GeneratorConfig = {
   size: 6,
   waypointCount: 4,
-  wallCount: 8,
+  wallCount: 9,
   k: 2,
   threshold: 6,
-  minParLength: 8,
+  minParLength: 10,
   maxAttempts: 800,
 }
 
@@ -63,15 +67,15 @@ function dayIndex(date: string): number {
 }
 
 /**
- * Rampa de dificuldade: a DENSIDADE DE PAREDES sobe devagar com o tempo (grade
- * fixa em 6×6). O `threshold` NÃO sobe — medimos que no 6×6 com 4 waypoints o
- * gap raramente passa de 6, então threshold > 6 cairia em fallback (geração
- * lenta). Mais paredes deixam o labirinto mais fechado/torto sem quebrar a
- * geração. Teto verificado por diagnóstico numa faixa de dias.
+ * Rampa de dificuldade: a densidade de paredes sobe **de leve** com o tempo
+ * (grade fixa em 6×6; começa em 9). Teto baixo (10) DE PROPÓSITO: medimos que
+ * paredes demais não elevam o gap, só a taxa de fallback (≥11 → ~45%). O ganho
+ * de "labirinto mais fechado" é modesto; a dificuldade real vem dos elementos de
+ * tabuleiro. `threshold` não sobe (>6 cairia em fallback).
  */
 export function rampForDay(i: number): Pick<GeneratorConfig, 'wallCount'> {
   return {
-    wallCount: Math.min(11, 8 + Math.floor(i / 28)), // +1 a cada ~4 semanas, teto 11
+    wallCount: Math.min(10, 9 + Math.floor(i / 28)), // 9 → 10 após ~4 semanas
   }
 }
 

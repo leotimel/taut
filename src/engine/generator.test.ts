@@ -37,10 +37,10 @@ describe('generateDaily', () => {
   })
 
   describe('rampForDay (rampa de dificuldade)', () => {
-    it('começa em 8 paredes e sobe devagar até o teto 11', () => {
-      expect(rampForDay(0).wallCount).toBe(8)
-      expect(rampForDay(28).wallCount).toBe(9)
-      expect(rampForDay(300).wallCount).toBe(11)
+    it('começa em 9 paredes e sobe devagar até o teto 10', () => {
+      expect(rampForDay(0).wallCount).toBe(9)
+      expect(rampForDay(28).wallCount).toBe(10)
+      expect(rampForDay(300).wallCount).toBe(10)
     })
     it('é monotônica não-decrescente', () => {
       let prev = 0
