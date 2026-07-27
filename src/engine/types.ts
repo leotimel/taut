@@ -34,6 +34,11 @@ export interface Puzzle {
   waypoints: Point[]
   /** Paredes (barreiras nas arestas entre células). */
   walls: Wall[]
+  /**
+   * Células PROIBIDAS: buracos no tabuleiro onde não se pode pisar (o traçado
+   * as contorna). Opcional/vazio quando não há. Nunca coincidem com waypoints.
+   */
+  blocked?: Point[]
   /** Seed derivada da data — torna a geração reproduzível. */
   seed: number
 }

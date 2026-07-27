@@ -75,6 +75,12 @@ export function solve(puzzle: Puzzle, k = 2): SolveResult | null {
   }
 
   const visited = new Uint8Array(size * size)
+  // Células proibidas: marca como "visitadas" de saída → o DFS nunca entra nelas.
+  for (const b of puzzle.blocked ?? []) {
+    if (b.x >= 0 && b.y >= 0 && b.x < size && b.y < size) {
+      visited[cellIndex(b.x, b.y)] = 1
+    }
+  }
   const path: Point[] = [start]
   visited[cellIndex(start.x, start.y)] = 1
 

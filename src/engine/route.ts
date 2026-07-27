@@ -26,6 +26,7 @@ export function routeTo(path: Path, target: Point, puzzle: Puzzle): Path {
   if (target.x < 0 || target.y < 0 || target.x >= size || target.y >= size) return path
 
   const wallSet = new Set(walls.map((w) => edgeKey(w.a, w.b)))
+  const blockedSet = new Set((puzzle.blocked ?? []).map(pointKey))
   const wpIndex = new Map<string, number>()
   waypoints.forEach((w, i) => wpIndex.set(pointKey(w), i))
 
@@ -43,6 +44,7 @@ export function routeTo(path: Path, target: Point, puzzle: Puzzle): Path {
     const next: Point = { x: curr.x + dx, y: curr.y + dy }
     if (wallSet.has(edgeKey(curr, next))) break // parede na aresta
     const nk = pointKey(next)
+    if (blockedSet.has(nk)) break // célula proibida
     if (visited.has(nk)) break // auto-evitante
     const wi = wpIndex.get(nk)
     if (wi !== undefined && wi !== reached) break // waypoint fora de hora

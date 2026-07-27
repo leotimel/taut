@@ -24,6 +24,8 @@ pela data.
 - **Auto-evitante:** nunca cruza nem repete uma célula.
 - Não cruza **parede** (barreira na aresta entre duas células; as células seguem
   pisáveis).
+- Não pisa em **célula proibida** (buraco no tabuleiro; o traçado contorna).
+  `Puzzle.blocked?: Point[]`; solver/validator/route/BoardSVG a respeitam.
 - **Não precisa preencher** a grade (caminho livre).
 
 ## Pontuação
@@ -45,9 +47,12 @@ pela data.
   **oráculo**.
 - **Garantia:** aceita o tabuleiro só se `custo_guloso − par.total ≥ limiar` —
   sempre existe margem de melhora. Rejeita tabuleiros insolúveis ou triviais.
-- **Rampa de dificuldade** (`rampForDay`): a densidade de paredes cresce com o
-  tempo (grade fixa em **6×6** — o solver exato não escala pro 7×7 na meta de
-  tempo). `DEFAULT_CONFIG` é a superfície de tuning documentada.
+- **Rampa de dificuldade** (`rampForDay`, grade fixa **6×6**): paredes 9→10 e
+  **células proibidas 0→1**. **Medição (jul/2026):** densidade de paredes NÃO
+  eleva o gap, só o fallback (≥11 → ~45%); 2 células proibidas no 6×6 levam ~75%
+  dos dias a fallback (gap ≤4) — por isso o cap é **1** no normal (mais fica pro
+  Expert). A dificuldade real vem dos **elementos de tabuleiro**, não de afinar
+  paredes/threshold. `DEFAULT_CONFIG` é a superfície de tuning documentada.
 
 ## Convenções
 

@@ -9,6 +9,7 @@ import { areOrthogonallyAdjacent, edgeKey, samePoint, pointKey } from './geometr
 export type InvalidReason =
   | 'empty' // caminho vazio
   | 'out-of-bounds' // célula fora da grade
+  | 'blocked-cell' // pisa numa célula proibida
   | 'crosses-wall' // passo cruza uma parede (barreira de aresta)
   | 'not-adjacent' // passo não é ortogonalmente adjacente
   | 'self-intersecting' // repete/cruza uma célula (não é auto-evitante)
@@ -32,6 +33,7 @@ export function isLegalPath(path: Path, puzzle: Puzzle): ValidationResult {
   if (path.length === 0) return { legal: false, reason: 'empty' }
 
   const wallSet = new Set(walls.map((w) => edgeKey(w.a, w.b)))
+  const blockedSet = new Set((puzzle.blocked ?? []).map(pointKey))
   const seen = new Set<string>()
 
   for (let i = 0; i < path.length; i++) {
@@ -40,6 +42,11 @@ export function isLegalPath(path: Path, puzzle: Puzzle): ValidationResult {
     // 1. Dentro da grade quadrada.
     if (cell.x < 0 || cell.y < 0 || cell.x >= size || cell.y >= size) {
       return { legal: false, reason: 'out-of-bounds', at: cell }
+    }
+
+    // 1b. Não pisa em célula proibida.
+    if (blockedSet.has(pointKey(cell))) {
+      return { legal: false, reason: 'blocked-cell', at: cell }
     }
 
     if (i > 0) {

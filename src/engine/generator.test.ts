@@ -6,6 +6,7 @@ import {
   DEFAULT_CONFIG,
 } from './generator'
 import { solve } from './solver'
+import { isLegalPath } from './validator'
 import { hashStringToSeed } from './rng'
 import { manhattan, edgeKey } from './geometry'
 
@@ -36,18 +37,38 @@ describe('generateDaily', () => {
     expect(pz.waypoints).toHaveLength(3)
   })
 
+  it('com células proibidas: válido, solúvel e o par as contorna', () => {
+    const pz = generateDaily('2026-06-03', { blockedCount: 2 })
+    expect(pz.blocked).toHaveLength(2)
+    // proibidas nunca sobre um waypoint
+    const wpKeys = new Set(pz.waypoints.map((c) => `${c.x},${c.y}`))
+    for (const b of pz.blocked!) expect(wpKeys.has(`${b.x},${b.y}`)).toBe(false)
+    // solúvel e o par (ótimo) é um caminho legal → não pisa nas proibidas
+    const sol = solve(pz, DEFAULT_CONFIG.k)
+    expect(sol).not.toBeNull()
+    expect(isLegalPath(sol!.bestPath, pz).legal).toBe(true)
+  })
+
   describe('rampForDay (rampa de dificuldade)', () => {
-    it('começa em 9 paredes e sobe devagar até o teto 10', () => {
+    it('paredes: começa em 9 e sobe devagar até o teto 10', () => {
       expect(rampForDay(0).wallCount).toBe(9)
       expect(rampForDay(28).wallCount).toBe(10)
       expect(rampForDay(300).wallCount).toBe(10)
     })
-    it('é monotônica não-decrescente', () => {
-      let prev = 0
+    it('células proibidas: 0 no começo, 1 após ~1 mês (teto 1 no normal)', () => {
+      expect(rampForDay(0).blockedCount).toBe(0)
+      expect(rampForDay(30).blockedCount).toBe(1)
+      expect(rampForDay(300).blockedCount).toBe(1)
+    })
+    it('é monotônica não-decrescente (paredes e proibidas)', () => {
+      let prevW = 0
+      let prevB = 0
       for (let i = 0; i < 400; i += 7) {
-        const w = rampForDay(i).wallCount
-        expect(w).toBeGreaterThanOrEqual(prev)
-        prev = w
+        const { wallCount, blockedCount } = rampForDay(i)
+        expect(wallCount).toBeGreaterThanOrEqual(prevW)
+        expect(blockedCount).toBeGreaterThanOrEqual(prevB)
+        prevW = wallCount
+        prevB = blockedCount
       }
     })
   })

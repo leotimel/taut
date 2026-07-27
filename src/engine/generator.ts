@@ -17,6 +17,8 @@ export interface GeneratorConfig {
   waypointCount: number
   /** Quantidade de paredes (barreiras de aresta). */
   wallCount: number
+  /** Quantidade de células proibidas (buracos não-pisáveis). */
+  blockedCount: number
   /** Peso das curvas no score (deve casar com o resto do app). */
   k: number
   /** Margem mínima exigida: `custo_guloso − par.total ≥ threshold`. */
@@ -47,6 +49,7 @@ export const DEFAULT_CONFIG: GeneratorConfig = {
   size: 6,
   waypointCount: 4,
   wallCount: 9,
+  blockedCount: 0, // a rampa introduz 1 célula proibida com o tempo (0→1)
   k: 2,
   threshold: 6,
   minParLength: 10,
@@ -67,15 +70,23 @@ function dayIndex(date: string): number {
 }
 
 /**
- * Rampa de dificuldade: a densidade de paredes sobe **de leve** com o tempo
- * (grade fixa em 6×6; começa em 9). Teto baixo (10) DE PROPÓSITO: medimos que
- * paredes demais não elevam o gap, só a taxa de fallback (≥11 → ~45%). O ganho
- * de "labirinto mais fechado" é modesto; a dificuldade real vem dos elementos de
- * tabuleiro. `threshold` não sobe (>6 cairia em fallback).
+ * Rampa de dificuldade. Duas alavancas sobem **de leve** com o tempo (grade fixa
+ * 6×6):
+ * - **Paredes** 9 → 10 (teto baixo DE PROPÓSITO: medimos que paredes demais não
+ *   elevam o gap, só a taxa de fallback — ≥11 → ~45%).
+ * - **Células proibidas** 0 → 1 (o elemento novo: o traçado contorna um buraco).
+ *   Cap em 1 DE PROPÓSITO no normal: medimos que 2 buracos no 6×6 levam ~75% dos
+ *   dias a fallback (gap ≤ 4) — o caminho guloso já fica quase no ideal, matando
+ *   o loop de otimização. Densidade maior fica pro Expert (Onda 4).
+ *
+ * `threshold` não sobe (>6 cairia em fallback).
  */
-export function rampForDay(i: number): Pick<GeneratorConfig, 'wallCount'> {
+export function rampForDay(
+  i: number,
+): Pick<GeneratorConfig, 'wallCount' | 'blockedCount'> {
   return {
     wallCount: Math.min(10, 9 + Math.floor(i / 28)), // 9 → 10 após ~4 semanas
+    blockedCount: Math.min(1, Math.floor(i / 30)), // 0 → 1 após ~1 mês
   }
 }
 
@@ -123,7 +134,7 @@ function drawCandidate(
   date: string,
   seed: number,
 ): Puzzle | null {
-  const { size, waypointCount, wallCount } = cfg
+  const { size, waypointCount, wallCount, blockedCount } = cfg
   const usedCells = new Set<number>()
 
   const waypoints: Point[] = []
@@ -144,7 +155,17 @@ function drawCandidate(
     walls.push(edge)
   }
 
-  return { date, size, waypoints, walls, seed }
+  // Células proibidas: em células livres (nunca sobre waypoints). Se travarem o
+  // tabuleiro, o solve falha adiante e o candidato é descartado.
+  const blocked: Point[] = []
+  for (let i = 0; i < blockedCount; i++) {
+    const cell = pickFreeCell(rng, size, usedCells)
+    if (cell === null) return null
+    usedCells.add(cellId(size, cell))
+    blocked.push(cell)
+  }
+
+  return { date, size, waypoints, walls, blocked, seed }
 }
 
 export interface PuzzleAnalysis {

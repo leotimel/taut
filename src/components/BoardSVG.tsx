@@ -46,6 +46,19 @@ export function BoardBackground({
           />
         )),
       )}
+      {/* Células proibidas: buracos sólidos que o traçado contorna. */}
+      {(puzzle.blocked ?? []).map((b, i) => (
+        <rect
+          key={`b-${i}`}
+          x={pad + b.x * cell + gridInset}
+          y={pad + b.y * cell + gridInset}
+          width={cell - gridInset * 2}
+          height={cell - gridInset * 2}
+          rx={cellRx}
+          fill="var(--taut-wall)"
+          opacity={0.85}
+        />
+      ))}
       {walls.map((w, i) => {
         const horizontal = w.a.y === w.b.y // vizinhos na horizontal → barra vertical
         if (horizontal) {

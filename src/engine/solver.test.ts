@@ -32,6 +32,23 @@ describe('solve', () => {
     expect(r!.par).toEqual({ length: 4, turns: 2, total: 8 })
   })
 
+  it('contorna célula proibida: a reta vira desvio (total 8)', () => {
+    // (0,0)→(2,0) seria reta (total 2), mas (1,0) é proibida → desce e volta.
+    const pz: Puzzle = {
+      date: '2026-06-03',
+      size: 3,
+      waypoints: [p(0, 0), p(2, 0)],
+      walls: [],
+      blocked: [p(1, 0)],
+      seed: 0,
+    }
+    const r = solve(pz)!
+    expect(r).not.toBeNull()
+    expect(isLegalPath(r.bestPath, pz)).toEqual({ legal: true })
+    expect(r.bestPath.some((c) => c.x === 1 && c.y === 0)).toBe(false)
+    expect(r.par).toEqual({ length: 4, turns: 2, total: 8 })
+  })
+
   it('3 waypoints em L: total 6 (uma curva no waypoint do meio)', () => {
     const r = solve(puzzle(3, [p(0, 0), p(2, 0), p(2, 2)]))
     expect(r!.par).toEqual({ length: 4, turns: 1, total: 6 })

@@ -38,6 +38,13 @@ describe('isLegalPath', () => {
     expect(r).toMatchObject({ legal: false, reason: 'crosses-wall', at: p(2, 2) })
   })
 
+  it('rejeita pisar em célula proibida', () => {
+    const puzzle: Puzzle = { ...base, blocked: [p(1, 0)] }
+    const path = [p(0, 0), p(1, 0)] // (1,0) é proibida
+    const r = isLegalPath(path, puzzle)
+    expect(r).toMatchObject({ legal: false, reason: 'blocked-cell', at: p(1, 0) })
+  })
+
   it('rejeita passo não adjacente (salto)', () => {
     const path = [p(0, 0), p(2, 0)] // pulo de 2
     const r = isLegalPath(path, base)
