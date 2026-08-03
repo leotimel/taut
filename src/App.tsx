@@ -13,6 +13,7 @@ import {
   setPaletteId,
   isSoundOn,
   setSoundOn,
+  type Mode,
 } from './lib/storage'
 import { applyPalette } from './lib/palettes'
 import { setMuted } from './lib/sound'
@@ -27,11 +28,15 @@ export default function App() {
   const [archiveOpen, setArchiveOpen] = useState(false)
   // Data em treino (dia passado); null = puzzle de hoje.
   const [trainingDate, setTrainingDate] = useState<string | null>(null)
+  // Modo do puzzle de hoje: normal ou Expert (2º puzzle, mais denso).
+  const [mode, setMode] = useState<Mode>('daily')
 
   // O cronômetro só corre com o grid jogável (sem overlay por cima). A pausa
   // fora de foco (aba) é tratada dentro do useTaut. Em treino, persist=false.
   const gridActive = !modalOpen && !onboardingOpen && !tutorialOpen && !archiveOpen
-  const taut = useTaut(trainingDate ?? undefined, gridActive, trainingDate === null)
+  // Treino é sempre do puzzle normal daquele dia.
+  const activeMode: Mode = trainingDate ? 'daily' : mode
+  const taut = useTaut(trainingDate ?? undefined, gridActive, trainingDate === null, activeMode)
 
   useEffect(() => {
     applyPalette(paletteId)
@@ -67,6 +72,10 @@ export default function App() {
   const exitTraining = () => {
     setModalOpen(false)
     setTrainingDate(null)
+  }
+  const selectMode = (m: Mode) => {
+    setModalOpen(false)
+    setMode(m)
   }
 
   const completedDates = new Set(
@@ -158,6 +167,29 @@ export default function App() {
             Nv {taut.level.level} · {taut.level.codename}
           </span>
         </div>
+        {!trainingDate && (
+          <div className="mt-2 flex justify-center gap-1">
+            {(['daily', 'expert'] as const).map((m) => {
+              const on = mode === m
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => selectMode(m)}
+                  aria-pressed={on}
+                  className="rounded-full px-4 py-1 text-xs font-bold transition active:scale-95"
+                  style={{
+                    background: on ? 'var(--taut-path)' : 'var(--taut-grid)',
+                    color: on ? '#fff' : 'var(--taut-text)',
+                    border: `2px solid ${on ? 'var(--taut-path)' : 'var(--taut-grid-line)'}`,
+                  }}
+                >
+                  {m === 'daily' ? 'Normal' : 'Expert 🔥'}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </header>
 
       {trainingDate && (

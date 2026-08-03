@@ -56,6 +56,19 @@ export const DEFAULT_CONFIG: GeneratorConfig = {
   maxAttempts: 800,
 }
 
+/**
+ * Config do **Modo Expert** (2º puzzle diário, opt-in): mais denso que o normal —
+ * mais paredes e 2 células proibidas. Sobrepõe a rampa. Aceita mais fallback (a
+ * dificuldade aqui é navegar o labirinto fechado, não só o gap).
+ */
+export const EXPERT_CONFIG: Partial<GeneratorConfig> = {
+  wallCount: 11,
+  blockedCount: 2,
+}
+
+/** Salt de seed do Expert — garante um tabuleiro diferente do normal no mesmo dia. */
+export const EXPERT_SALT = ':expert'
+
 /** Dia 1 da rampa (mesma data-base do "Taut #N" em `lib/share`). */
 export const RAMP_EPOCH = '2026-06-01'
 
@@ -199,9 +212,10 @@ export function analyzePuzzle(puzzle: Puzzle, k = 2): PuzzleAnalysis | null {
 export function generateDaily(
   date: string,
   config: Partial<GeneratorConfig> = {},
+  seedSalt = '',
 ): Puzzle {
   const cfg = { ...DEFAULT_CONFIG, ...rampForDay(dayIndex(date)), ...config }
-  const seed = hashStringToSeed(date)
+  const seed = hashStringToSeed(date + seedSalt)
   const rng = mulberry32(seed)
 
   let best: { puzzle: Puzzle; gap: number } | null = null

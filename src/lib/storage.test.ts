@@ -117,4 +117,16 @@ describe('storage', () => {
     markOnboardingSeen()
     expect(hasSeenOnboarding()).toBe(true)
   })
+
+  it('modo expert tem histórico/stats separados do normal', () => {
+    saveResult(rec('2026-06-03', 5, 5), 'expert')
+    // não vaza pro daily
+    expect(getDay('2026-06-03')).toBeUndefined()
+    expect(getStats('2026-06-03', 'daily').daysPlayed).toBe(0)
+    // e existe no expert
+    expect(getDay('2026-06-03', 'expert')).toBeDefined()
+    const s = getStats('2026-06-03', 'expert')
+    expect(s.daysPlayed).toBe(1)
+    expect(s.parCount).toBe(1)
+  })
 })

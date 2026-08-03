@@ -4,6 +4,8 @@ import {
   analyzePuzzle,
   rampForDay,
   DEFAULT_CONFIG,
+  EXPERT_CONFIG,
+  EXPERT_SALT,
 } from './generator'
 import { solve } from './solver'
 import { isLegalPath } from './validator'
@@ -35,6 +37,18 @@ describe('generateDaily', () => {
   it('respeita overrides de config', () => {
     const pz = generateDaily('2026-06-03', { waypointCount: 3 })
     expect(pz.waypoints).toHaveLength(3)
+  })
+
+  it('Expert: mais denso (11 paredes + 2 proibidas), solúvel e ≠ do normal', () => {
+    for (const date of week) {
+      const expert = generateDaily(date, EXPERT_CONFIG, EXPERT_SALT)
+      expect(expert.walls).toHaveLength(EXPERT_CONFIG.wallCount!)
+      expect(expert.blocked).toHaveLength(EXPERT_CONFIG.blockedCount!)
+      expect(solve(expert, DEFAULT_CONFIG.k)).not.toBeNull()
+      expect(isLegalPath(solve(expert, DEFAULT_CONFIG.k)!.bestPath, expert).legal).toBe(true)
+      // o salt garante um tabuleiro diferente do normal no mesmo dia
+      expect(expert).not.toEqual(generateDaily(date))
+    }
   })
 
   it('com células proibidas: válido, solúvel e o par as contorna', () => {

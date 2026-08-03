@@ -69,6 +69,10 @@ pela data.
 - **Puzzle de hoje** conta pro streak/stats; ao terminar, contador pro próximo.
   **Arquivo/treino** (`components/Archive` + `useTaut(date, active, persist=false)`)
   permite rejogar dias passados SEM afetar streak/stats/XP nem a sessão de hoje.
+- **Modo Expert** (`useTaut(..., mode)`; `EXPERT_CONFIG` + `EXPERT_SALT` no gerador):
+  2º puzzle diário opt-in, mais denso (11 paredes + 2 células proibidas, seed
+  própria). Histórico, sessão, streak e **nível SEPARADOS** — o storage é
+  particionado por `Mode` ('daily' | 'expert', sufixo `:expert`).
 - **Cronômetro = tempo ATIVO** (`useTaut`): corre quando o grid está **jogável**
   (sem tutorial/onboarding/painel por cima — prop `active`) **e** a aba está
   visível; **pausa fora de foco** (`visibilitychange`) e na conclusão; persiste

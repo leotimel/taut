@@ -11,6 +11,10 @@ import type { Point } from '../engine/types'
 
 const STORAGE_KEY = 'taut:v1'
 
+/** Modo de jogo — cada um tem histórico/sessão/streak próprios no storage. */
+export type Mode = 'daily' | 'expert'
+const modeSuffix = (mode: Mode): string => (mode === 'expert' ? ':expert' : '')
+
 export interface DayRecord {
   /** Data ISO `YYYY-MM-DD`. */
   date: string
@@ -56,9 +60,9 @@ function isValidRecord(r: unknown): r is DayRecord {
   )
 }
 
-function load(): StoredData {
+function load(mode: Mode = 'daily'): StoredData {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(STORAGE_KEY + modeSuffix(mode))
     if (raw === null) return { history: [] }
     const parsed = JSON.parse(raw) as Partial<StoredData>
     if (parsed === null || !Array.isArray(parsed.history)) return { history: [] }
@@ -68,9 +72,9 @@ function load(): StoredData {
   }
 }
 
-function persist(data: StoredData): void {
+function persist(data: StoredData, mode: Mode = 'daily'): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    localStorage.setItem(STORAGE_KEY + modeSuffix(mode), JSON.stringify(data))
   } catch {
     // localStorage indisponível (modo privado/quota) — ignora silenciosamente.
   }
@@ -127,8 +131,8 @@ function computeCurrentStreak(
   return streak
 }
 
-export function getDay(date: string): DayRecord | undefined {
-  return load().history.find((r) => r.date === date)
+export function getDay(date: string, mode: Mode = 'daily'): DayRecord | undefined {
+  return load(mode).history.find((r) => r.date === date)
 }
 
 /**
@@ -136,8 +140,8 @@ export function getDay(date: string): DayRecord | undefined {
  * (melhoria), o par do dia, e "concluído" pegajoso. Resultados não-concluídos
  * não sobrescrevem um score já concluído.
  */
-export function saveResult(record: DayRecord): void {
-  const data = load()
+export function saveResult(record: DayRecord, mode: Mode = 'daily'): void {
+  const data = load(mode)
   const existing = data.history.find((r) => r.date === record.date)
   if (existing === undefined) {
     data.history.push({ ...record })
@@ -156,11 +160,11 @@ export function saveResult(record: DayRecord): void {
       existing.completed = true
     }
   }
-  persist(data)
+  persist(data, mode)
 }
 
-export function getStats(today: string): Stats {
-  const history = [...load().history].sort(
+export function getStats(today: string, mode: Mode = 'daily'): Stats {
+  const history = [...load(mode).history].sort(
     (a, b) => dayNumber(a.date) - dayNumber(b.date),
   )
   const completed = history.filter((r) => r.completed)
@@ -195,8 +199,10 @@ export function getStats(today: string): Stats {
 /** Limpa todo o histórico (usado em testes e por um eventual reset). */
 export function clearAll(): void {
   try {
-    localStorage.removeItem(STORAGE_KEY)
-    localStorage.removeItem(SESSION_KEY)
+    for (const m of ['daily', 'expert'] as const) {
+      localStorage.removeItem(STORAGE_KEY + modeSuffix(m))
+      localStorage.removeItem(SESSION_KEY + modeSuffix(m))
+    }
     localStorage.removeItem(ONBOARDING_KEY)
     localStorage.removeItem(PALETTE_KEY)
     localStorage.removeItem(SOUND_KEY)
@@ -222,9 +228,9 @@ export interface DaySession {
 }
 
 /** Carrega a sessão do dia; se não houver (ou for de outro dia), começa do zero. */
-export function loadSession(date: string): DaySession {
+export function loadSession(date: string, mode: Mode = 'daily'): DaySession {
   try {
-    const raw = localStorage.getItem(SESSION_KEY)
+    const raw = localStorage.getItem(SESSION_KEY + modeSuffix(mode))
     if (raw !== null) {
       const s = JSON.parse(raw) as DaySession
       if (s !== null && s.date === date && typeof s.attempts === 'number') {
@@ -243,9 +249,9 @@ export function loadSession(date: string): DaySession {
   return { date, elapsedMs: 0, completedAt: null, attempts: 1, path: [] }
 }
 
-export function saveSession(session: DaySession): void {
+export function saveSession(session: DaySession, mode: Mode = 'daily'): void {
   try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    localStorage.setItem(SESSION_KEY + modeSuffix(mode), JSON.stringify(session))
   } catch {
     // ignora
   }
