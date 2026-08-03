@@ -49,6 +49,18 @@ describe('useTaut', () => {
     expect(result.current.path).toHaveLength(1)
   })
 
+  it('treino (persist=false): conclui sem gravar sessão nem histórico', () => {
+    const { result } = renderHook(() => useTaut('2026-06-03', true, false))
+    const best = solve(result.current.puzzle, 2)!.bestPath
+    act(() => {
+      for (const cell of best.slice(1)) result.current.route(cell)
+    })
+    expect(result.current.completed).toBe(true)
+    expect(localStorage.getItem('taut:session:v1')).toBeNull() // sessão intacta
+    expect(result.current.stats.daysPlayed).toBe(0) // nada no histórico
+    expect(result.current.leveledUp).toBe(false) // sem XP em treino
+  })
+
   it('o cronômetro só corre quando active (grid jogável)', () => {
     vi.useFakeTimers()
     try {

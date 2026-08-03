@@ -66,7 +66,9 @@ pela data.
   falha** — o caminho sempre dá pra concluir; chegar no par é **bônus/selo**, não
   exigência. **Escudos** (1 a cada 10 dias, máx. 2) toleram dias pulados; marcos
   comemorados em 7/30/100.
-- Só o **puzzle de hoje** (sem arquivo/treino); ao terminar, contador pro próximo.
+- **Puzzle de hoje** conta pro streak/stats; ao terminar, contador pro próximo.
+  **Arquivo/treino** (`components/Archive` + `useTaut(date, active, persist=false)`)
+  permite rejogar dias passados SEM afetar streak/stats/XP nem a sessão de hoje.
 - **Cronômetro = tempo ATIVO** (`useTaut`): corre quando o grid está **jogável**
   (sem tutorial/onboarding/painel por cima — prop `active`) **e** a aba está
   visível; **pausa fora de foco** (`visibilitychange`) e na conclusão; persiste

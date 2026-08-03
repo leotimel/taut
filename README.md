@@ -66,6 +66,7 @@ nunca importa nada de UI.
 - ⏱ **Cronômetro de tempo ativo:** começa quando o grid aparece e **pausa** quando
   a aba sai de foco (conta só o tempo jogando).
 - 🎓 **Tutorial interativo** na 1ª visita — você pratica num tabuleiro de treino.
+- 📅 **Arquivo/treino:** rejogue puzzles de dias passados (não conta pro streak).
 - 🔊 **Som + confete** (juice) ao traçar, concluir e subir de nível — com mudo e
   respeito a `prefers-reduced-motion`.
 - 📤 **Compartilhar** estilo Wordle (texto): esforço, tempo, tentativas (se houve
