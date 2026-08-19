@@ -307,7 +307,7 @@ export function ResultModal({
         <div className="flex flex-1 flex-col items-center gap-4 overflow-y-auto px-6 pb-4">
           {completed ? (
           <>
-            <h2 className="text-2xl font-black">
+            <h2 className="taut-pop text-2xl font-black">
               {atPar ? 'No ideal! 🎉' : 'Concluído! ✓'}
             </h2>
 

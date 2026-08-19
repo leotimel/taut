@@ -18,6 +18,9 @@ export const PALETTES: PaletteMeta[] = [
   { id: 'ocean', name: 'Oceano', unlockLevel: 5, swatch: { bg: '#ecfeff', path: '#0d9488', wp: '#fb7185' } },
   { id: 'forest', name: 'Floresta', unlockLevel: 10, swatch: { bg: '#f7fee7', path: '#16a34a', wp: '#f59e0b' } },
   { id: 'neon', name: 'Neon noturno', unlockLevel: 25, swatch: { bg: '#0b1020', path: '#22d3ee', wp: '#f472b6' } },
+  { id: 'amethyst', name: 'Ametista', unlockLevel: 40, swatch: { bg: '#faf5ff', path: '#7c3aed', wp: '#f59e0b' } },
+  { id: 'ruby', name: 'Rubi', unlockLevel: 60, swatch: { bg: '#fff1f2', path: '#e11d48', wp: '#0891b2' } },
+  { id: 'aurea', name: 'Áurea', unlockLevel: 100, swatch: { bg: '#fffbeb', path: '#d97706', wp: '#7c3aed' } },
 ]
 
 export const DEFAULT_PALETTE = 'sunset'
