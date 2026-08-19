@@ -51,6 +51,8 @@ const base = {
   leveledUp: false,
   paletteId: 'sunset',
   onSelectPalette: () => {},
+  mode: 'daily' as const,
+  showLeaderboard: false,
 }
 
 describe('ResultModal', () => {

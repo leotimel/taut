@@ -69,6 +69,7 @@ nunca importa nada de UI.
 - 📅 **Arquivo/treino:** rejogue puzzles de dias passados (não conta pro streak).
 - 🔥 **Modo Expert:** um 2º puzzle diário mais denso (mais paredes + buracos), com
   streak e progressão próprios.
+- 🏆 **Ranking diário** anônimo (Supabase): top-N + sua posição, por modo.
 - 🔊 **Som + confete** (juice) ao traçar, concluir e subir de nível — com mudo e
   respeito a `prefers-reduced-motion`.
 - 📤 **Compartilhar** estilo Wordle (texto): esforço, tempo, tentativas (se houve

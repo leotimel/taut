@@ -8,7 +8,8 @@
 import { useEffect, useState } from 'react'
 import type { Point, Puzzle, Score } from '../engine/types'
 import type { PointsBreakdown } from '../lib/points'
-import { STREAK_MILESTONES, type Stats, type DayRecord } from '../lib/storage'
+import { STREAK_MILESTONES, type Stats, type DayRecord, type Mode } from '../lib/storage'
+import { Leaderboard } from './Leaderboard'
 import type { ShareResult } from '../lib/share'
 import { isLandmark, type LevelInfo } from '../lib/level'
 import { PALETTES } from '../lib/palettes'
@@ -35,6 +36,10 @@ interface ResultModalProps {
   paletteId: string
   onSelectPalette: (id: string) => void
   onShare?: () => Promise<ShareResult> | void
+  /** Modo do puzzle (pro ranking separado por modo). */
+  mode: Mode
+  /** Mostra o ranking (só no jogo real de hoje — não em treino). */
+  showLeaderboard: boolean
 }
 
 const CELL = 40
@@ -208,6 +213,8 @@ export function ResultModal({
   paletteId,
   onSelectPalette,
   onShare,
+  mode,
+  showLeaderboard,
 }: ResultModalProps) {
   const countdown = useCountdown(open)
   const [toast, setToast] = useState<string | null>(null)
@@ -401,6 +408,11 @@ export function ResultModal({
             </p>
           )}
         </div>
+
+        {/* Ranking do dia (só no jogo real de hoje) */}
+        {showLeaderboard && completed && (
+          <Leaderboard day={puzzle.date} mode={mode} />
+        )}
 
         {/* Precisão (histograma) */}
         {stats.daysPlayed > 0 && <GapHistogram history={stats.history} />}

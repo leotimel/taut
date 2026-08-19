@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTaut, todayISO } from './hooks/useTaut'
+import { submitScore, leaderboardEnabled } from './lib/leaderboard'
+import { getAnonId, getPlayerName } from './lib/anonId'
 import { GameCanvas } from './components/GameCanvas'
 import { ResultModal } from './components/ResultModal'
 import { buildShareText, share, puzzleNumber } from './lib/share'
@@ -86,6 +88,25 @@ export default function App() {
   useEffect(() => {
     if (taut.completed) setModalOpen(true)
   }, [taut.completed])
+
+  // Envia o resultado pro ranking ao concluir (só jogo real de hoje, uma vez
+  // por dia/modo). Treino (persist=false) não entra no ranking.
+  const submittedRef = useRef('')
+  useEffect(() => {
+    if (!taut.completed || trainingDate) return
+    const key = `${taut.date}:${activeMode}`
+    if (submittedRef.current === key) return
+    submittedRef.current = key
+    void submitScore({
+      day: taut.date,
+      mode: activeMode,
+      anonId: getAnonId(),
+      name: getPlayerName(),
+      effort: taut.points.total,
+      timeMs: taut.elapsedMs,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taut.completed, taut.date, activeMode, trainingDate])
 
   const handleShare = () =>
     share(
@@ -247,6 +268,8 @@ export default function App() {
         paletteId={paletteId}
         onSelectPalette={selectPalette}
         onShare={handleShare}
+        mode={activeMode}
+        showLeaderboard={!trainingDate && leaderboardEnabled}
       />
 
       <Onboarding open={onboardingOpen} onClose={closeOnboarding} />

@@ -104,7 +104,14 @@ pela data.
   tabuleiro; toque ≥44px; respeita `prefers-reduced-motion`.
 - **PWA** instalável (offline); **deploy automático** na Vercel
   (**playtaut.vercel.app**) a cada push na `main`.
+- **Ranking diário** (`lib/leaderboard.ts` + `lib/anonId.ts` + `components/Leaderboard`):
+  backend **leve** via **Supabase** (tabela `results`, RLS). Anônimo (UUID no
+  localStorage + nome opcional), separado por modo. Envia ao concluir (só jogo
+  real, não treino); mostra top-N + sua posição no modal. SDK **lazy-loaded**;
+  best-effort (se offline/sem tabela, o ranking só não aparece). A chave `anon` é
+  pública (protegida por RLS); pode migrar pra env `VITE_SUPABASE_*` na Vercel.
 
 ## Não construir ainda
 
-Figura revelada (v1 = golfe puro), contas de usuário, multiplayer/backend.
+Figura revelada (v1 = golfe puro), **contas de usuário / login**, multiplayer em
+tempo real. (Backend leve para ranking anônimo já existe — ver acima.)
